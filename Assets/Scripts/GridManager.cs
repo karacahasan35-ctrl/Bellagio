@@ -50,6 +50,7 @@ public class GridManager : MonoBehaviour
             {
                 Vector3 spawnPos = new Vector3(startX + x * cellSize, startY + y * cellSize, 0);
                 GameObject cellObj = Instantiate(cellPrefab, spawnPos, Quaternion.identity, transform);
+                cellObj.SetActive(true);
                 cellObj.name = $"Cell_{x}_{y}";
 
                 GridCell cell = cellObj.GetComponent<GridCell>();
@@ -93,6 +94,7 @@ public class GridManager : MonoBehaviour
 
         // Eşyayı spawn et
         GameObject itemObj = Instantiate(itemPrefab, randomCell.transform.position, Quaternion.identity);
+        itemObj.SetActive(true);
         MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
         mergeItem.Initialize(randomItemData, randomCell);
     }

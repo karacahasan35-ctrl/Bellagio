@@ -17,8 +17,13 @@ public class MergeItem : MonoBehaviour
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        boxCollider = GetComponent<BoxCollider2D>();
+        EnsureComponents();
+    }
+
+    private void EnsureComponents()
+    {
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        if (boxCollider == null) boxCollider = GetComponent<BoxCollider2D>();
     }
 
     private void Start()
@@ -28,6 +33,7 @@ public class MergeItem : MonoBehaviour
 
     public void Initialize(ItemData data, GridCell cell)
     {
+        EnsureComponents();
         itemData = data;
         currentCell = cell;
         if (cell != null)
@@ -40,6 +46,7 @@ public class MergeItem : MonoBehaviour
 
     public void UpdateVisuals()
     {
+        EnsureComponents();
         if (itemData != null)
         {
             spriteRenderer.color = itemData.itemColor;
