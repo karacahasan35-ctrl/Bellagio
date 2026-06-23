@@ -1,9 +1,10 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(SpriteRenderer))]
 [RequireComponent(typeof(BoxCollider2D))]
-public class MergeItem : MonoBehaviour
+public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     public ItemData itemData;
     public GridCell currentCell;
@@ -50,9 +51,13 @@ public class MergeItem : MonoBehaviour
         if (itemData != null)
         {
             spriteRenderer.color = itemData.itemColor;
-            
-            // Gerçekçi çizim fabrikasını kullan! (URP 2D uyumlu unlit sprite üretir)
             spriteRenderer.sprite = RestorationSpriteFactory.GetSprite(itemData.itemChainName, itemData.level, itemData.isGenerator);
+            
+            // Collider boyutunu sprite sınırlarına göre otomatik ayarla
+            if (spriteRenderer.sprite != null && boxCollider != null)
+            {
+                boxCollider.size = spriteRenderer.sprite.rect.size / spriteRenderer.sprite.pixelsPerUnit;
+            }
         }
     }
 
@@ -96,17 +101,16 @@ public class MergeItem : MonoBehaviour
         return sprite;
     }
 
-    private void OnMouseDown()
+    public void OnPointerDown(PointerEventData eventData)
     {
         if (snapCoroutine != null) StopCoroutine(snapCoroutine);
 
-        // Seçimi kaydet
         if (GridManager.Instance != null)
         {
             GridManager.Instance.selectedItem = this;
         }
 
-        // JENERATÖR mekaniği: Tıklanınca etrafta eşya üret, sürükleme yapma!
+        // JENERATÖR mekaniği
         if (itemData != null && itemData.isGenerator)
         {
             isDragging = false;
@@ -114,7 +118,6 @@ public class MergeItem : MonoBehaviour
             {
                 GridManager.Instance.SpawnItemFromGenerator(this);
             }
-            // Küçük bir tıklama yaylanma efekti
             transform.localScale = Vector3.one * 0.85f;
             StartCoroutine(ScaleBackToNormal());
             return;
@@ -124,70 +127,100 @@ public class MergeItem : MonoBehaviour
         originalPosition = currentCell != null ? currentCell.transform.position : transform.position;
         transform.localScale = Vector3.one * 1.15f;
 
-        // Fare ile nesnenin merkezi arasındaki mesafeyi kaydet
-        Vector3 mouseWorldPos = GetMouseWorldPosition();
-        offset = transform.position - mouseWorldPos;
+        Vector3 pointerWorldPos = GetWorldPositionOfPointer(eventData);
+        offset = transform.position - pointerWorldPos;
 
-        // Nesneyi katman olarak öne taşı
         spriteRenderer.sortingOrder = 10;
     }
 
-    private void OnMouseDrag()
+    public void OnDrag(PointerEventData eventData)
     {
         if (isDragging)
         {
-            Vector3 mouseWorldPos = GetMouseWorldPosition();
-            transform.position = new Vector3(mouseWorldPos.x + offset.x, mouseWorldPos.y + offset.y, transform.position.z);
+            Vector3 pointerWorldPos = GetWorldPositionOfPointer(eventData);
+            transform.position = new Vector3(pointerWorldPos.x + offset.x, pointerWorldPos.y + offset.y, transform.position.z);
         }
     }
 
-    private void OnMouseUp()
+    public void OnPointerUp(PointerEventData eventData)
     {
+        if (!isDragging) return;
         isDragging = false;
-        spriteRenderer.sortingOrder = 5; // Normal katmana geri al
-        transform.localScale = Vector3.one; // Normal boyuta getir
+        spriteRenderer.sortingOrder = 5;
+        transform.localScale = Vector3.one;
 
-        // GridManager üzerinden üzerine bırakılan hücreyi bul
+        // 1. Hotspot (RestorationTarget) kontrolü yap!
+        RestorationTarget target = GetRestorationTargetUnderMouse();
+        if (target != null)
+        {
+            if (target.TryCompleteWithItem(this))
+            {
+                // Görev tamamlandı, eşya yok edildi.
+                return;
+            }
+        }
+
+        // 2. Klasik Grid birleştirme/yerleştirme kontrolü
         GridCell targetCell = GridManager.Instance.GetCellFromWorldPosition(transform.position);
 
         if (targetCell != null)
         {
             if (targetCell == currentCell)
             {
-                // Aynı hücreye bırakıldı, sadece yerine oturt
                 SnapTo(originalPosition);
             }
             else if (targetCell.IsEmpty)
             {
-                // Boş hücreye bırakıldı, eski hücreyi temizle, yeniye geç
                 currentCell.ClearCell();
                 targetCell.AssignItem(this);
                 SnapTo(targetCell.transform.position);
             }
             else
             {
-                // Dolu hücreye bırakıldı, birleşme kontrolü yap
                 MergeItem otherItem = targetCell.occupiedItem;
 
                 if (CanMergeWith(otherItem))
                 {
-                    // Birleştir
                     currentCell.ClearCell();
                     otherItem.Upgrade(itemData.nextLevelItem);
                     Destroy(gameObject);
                 }
                 else
                 {
-                    // Birleşemiyor, eski yerine geri dön
                     SnapTo(originalPosition);
                 }
             }
         }
         else
         {
-            // Grid dışına bırakıldı, eski yerine dön
             SnapTo(originalPosition);
         }
+    }
+
+    private Vector3 GetWorldPositionOfPointer(PointerEventData eventData)
+    {
+        Vector3 screenPoint = new Vector3(eventData.position.x, eventData.position.y, 0f);
+        screenPoint.z = Camera.main.WorldToScreenPoint(transform.position).z;
+        return Camera.main.ScreenToWorldPoint(screenPoint);
+    }
+
+    private RestorationTarget GetRestorationTargetUnderMouse()
+    {
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 mouseWorldPos2D = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(mouseWorldPos2D, Vector2.zero);
+        foreach (var hit in hits)
+        {
+            if (hit.collider != null)
+            {
+                RestorationTarget target = hit.collider.GetComponent<RestorationTarget>();
+                if (target != null)
+                {
+                    return target;
+                }
+            }
+        }
+        return null;
     }
 
     private bool CanMergeWith(MergeItem other)

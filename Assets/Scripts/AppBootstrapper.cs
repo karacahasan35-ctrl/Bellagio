@@ -20,9 +20,12 @@ public static class AppBootstrapper
             mainCam.orthographicSize = 5f; // Grid alanına uygun zoom derecesi
             mainCam.clearFlags = CameraClearFlags.SolidColor;
             
-            // Premium koyu gri/siyah arka plan rengi (#121214)
             mainCam.backgroundColor = new Color(0.07f, 0.07f, 0.08f, 1f); 
-            Debug.Log("[Bootstrapper] Camera configured with dark mode background.");
+            if (mainCam.GetComponent<UnityEngine.EventSystems.Physics2DRaycaster>() == null)
+            {
+                mainCam.gameObject.AddComponent<UnityEngine.EventSystems.Physics2DRaycaster>();
+            }
+            Debug.Log("[Bootstrapper] Camera configured with dark mode background and Physics2DRaycaster.");
         }
         else
         {
@@ -36,7 +39,8 @@ public static class AppBootstrapper
             mainCam.clearFlags = CameraClearFlags.SolidColor;
             mainCam.backgroundColor = new Color(0.07f, 0.07f, 0.08f, 1f);
             camObj.transform.position = new Vector3(0, 0, -10f);
-            Debug.Log("[Bootstrapper] Main Camera created procedurally.");
+            camObj.AddComponent<UnityEngine.EventSystems.Physics2DRaycaster>();
+            Debug.Log("[Bootstrapper] Main Camera created procedurally with Physics2DRaycaster.");
         }
 
         // 2. Sahnede GridManager var mı kontrol et, yoksa oluştur

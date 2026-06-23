@@ -7,8 +7,8 @@ public class GridManager : MonoBehaviour
 
     [Header("Grid Dimensions")]
     public int width = 5;
-    public int height = 6;
-    public float cellSize = 1.2f;
+    public int height = 4;
+    public float cellSize = 0.9f;
 
     [Header("Prefabs")]
     public GameObject cellPrefab;
@@ -46,13 +46,14 @@ public class GridManager : MonoBehaviour
         SetupDynamicPrefabs();
         GenerateGrid();
         SpawnInitialItems();
+        SpawnRestorationTargets();
     }
 
     private void GenerateGrid()
     {
-        // Grid'i ekranın ortasına hizalamak için başlangıç noktasını hesapla
+        // Grid'i ekranın alt yarısına hizalamak için başlangıç noktasını hesapla (yOffset = -2.2f)
         float startX = -(width - 1) * cellSize / 2f;
-        float startY = -(height - 1) * cellSize / 2f;
+        float startY = -(height - 1) * cellSize / 2f - 2.2f;
 
         for (int x = 0; x < width; x++)
         {
@@ -408,5 +409,42 @@ public class GridManager : MonoBehaviour
             }
         }
         return null;
+    }
+
+    public void SpawnRestorationTargets()
+    {
+        // Temizle (varsa eski hedefleri sil)
+        foreach (var oldTarget in Object.FindObjectsByType<RestorationTarget>(FindObjectsSortMode.None))
+        {
+            Destroy(oldTarget.gameObject);
+        }
+
+        // Görevler ve koordinatları
+        // t1: "Karoların Kalıntılarını Temizle", Tool Lvl 1 (Brush)
+        CreateTargetObject("t1", "Tool", 1, "Tozları Süpür", new Vector3(-1.5f, 2.5f, 0f));
+        // t2: "Çatlak Duvarları Kireç Harcıyla Doldur", Material Lvl 1 (Mortar)
+        CreateTargetObject("t2", "Material", 1, "Çatlakları Doldur", new Vector3(1.5f, 2.5f, 0f));
+        // t3: "Zemini Restorasyon Karosu ile Döşe", Material Lvl 2 (Tile)
+        CreateTargetObject("t3", "Material", 2, "Karoları Döşe", new Vector3(-1.0f, 0.8f, 0f));
+        // t4: "Kemer Sütunlarını Mermerle Yenile", Material Lvl 3 (Marble)
+        CreateTargetObject("t4", "Material", 3, "Sütunları Onar", new Vector3(1.0f, 0.8f, 0f));
+    }
+
+    private void CreateTargetObject(string taskId, string chain, int lvl, string desc, Vector3 pos)
+    {
+        if (TaskManager.Instance != null)
+        {
+            RenovationTask task = TaskManager.Instance.allTasks.Find(t => t.taskId == taskId);
+            if (task != null && task.isCompleted) return;
+        }
+
+        GameObject targetObj = new GameObject($"RestorationTarget_{taskId}");
+        targetObj.transform.position = pos;
+        
+        RestorationTarget target = targetObj.AddComponent<RestorationTarget>();
+        target.taskId = taskId;
+        target.requiredChainName = chain;
+        target.requiredLevel = lvl;
+        target.targetDescription = desc;
     }
 }
