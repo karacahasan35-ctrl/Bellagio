@@ -18,6 +18,7 @@ public class GridManager : MonoBehaviour
     public List<ItemData> spawnableItems; // İlk seviye eşyalar (örn: Seviye 1 Çakıl Taşı)
 
     private List<GridCell> allCells = new List<GridCell>();
+    [HideInInspector] public MergeItem selectedItem;
 
     private void Awake()
     {
@@ -232,5 +233,20 @@ public class GridManager : MonoBehaviour
         texture.SetPixels(pixels);
         texture.Apply();
         return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f));
+    }
+
+    public void SetGridVisibility(bool visible)
+    {
+        foreach (var cell in allCells)
+        {
+            if (cell != null)
+            {
+                cell.gameObject.SetActive(visible);
+                if (cell.occupiedItem != null)
+                {
+                    cell.occupiedItem.gameObject.SetActive(visible);
+                }
+            }
+        }
     }
 }

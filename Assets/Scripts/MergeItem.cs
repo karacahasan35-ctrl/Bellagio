@@ -110,6 +110,13 @@ public class MergeItem : MonoBehaviour
         isDragging = true;
         originalPosition = currentCell != null ? currentCell.transform.position : transform.position;
         
+        // Eşyayı seçilen olarak kaydet ve vurgulamak için hafif büyüt
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.selectedItem = this;
+        }
+        transform.localScale = Vector3.one * 1.15f;
+
         // Fare ile nesnenin merkezi arasındaki mesafeyi kaydet
         Vector3 mouseWorldPos = GetMouseWorldPosition();
         offset = transform.position - mouseWorldPos;
@@ -131,6 +138,7 @@ public class MergeItem : MonoBehaviour
     {
         isDragging = false;
         spriteRenderer.sortingOrder = 5; // Normal katmana geri al
+        transform.localScale = Vector3.one; // Normal boyuta getir
 
         // GridManager üzerinden üzerine bırakılan hücreyi bul
         GridCell targetCell = GridManager.Instance.GetCellFromWorldPosition(transform.position);

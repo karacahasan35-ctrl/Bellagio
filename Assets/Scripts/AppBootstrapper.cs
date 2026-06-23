@@ -47,5 +47,32 @@ public static class AppBootstrapper
             gridManager = gmObj.AddComponent<GridManager>();
             Debug.Log("[Bootstrapper] GridManager component created procedurally.");
         }
+
+        // 3. TaskManager oluştur
+        TaskManager taskManager = Object.FindAnyObjectByType<TaskManager>();
+        if (taskManager == null)
+        {
+            GameObject tmObj = new GameObject("TaskManager");
+            taskManager = tmObj.AddComponent<TaskManager>();
+            Debug.Log("[Bootstrapper] TaskManager created procedurally.");
+        }
+
+        // 4. RenovationManager oluştur
+        RenovationManager renovationManager = Object.FindAnyObjectByType<RenovationManager>();
+        if (renovationManager == null)
+        {
+            GameObject rmObj = new GameObject("RenovationManager");
+            renovationManager = rmObj.AddComponent<RenovationManager>();
+            Debug.Log("[Bootstrapper] RenovationManager created procedurally.");
+        }
+
+        // 5. GameUIManager oluştur
+        GameUIManager uiManager = Object.FindAnyObjectByType<GameUIManager>();
+        if (uiManager == null)
+        {
+            GameObject uiObj = new GameObject("GameUIManager");
+            uiManager = uiObj.AddComponent<GameUIManager>();
+            Debug.Log("[Bootstrapper] GameUIManager created procedurally.");
+        }
     }
 }
