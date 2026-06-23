@@ -151,6 +151,13 @@ public class GridManager : MonoBehaviour
             GameObject cellObj = new GameObject("DynamicCellTemplate");
             var sr = cellObj.AddComponent<SpriteRenderer>();
             
+            // URP 2D Unlit Material ata (Görünürlük için kritik!)
+            Shader unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+            if (unlitShader != null)
+            {
+                sr.material = new Material(unlitShader);
+            }
+            
             // Hücre görselini oluştur (Açık-koyu kontrastlı glassmorphic kenarlık)
             sr.sprite = CreateCellSprite(new Color(0.12f, 0.12f, 0.15f, 0.6f), new Color(0.23f, 0.23f, 0.28f, 1f));
             sr.sortingOrder = 1; // Arkada dursun
@@ -166,6 +173,14 @@ public class GridManager : MonoBehaviour
         {
             GameObject itemObj = new GameObject("DynamicItemTemplate");
             var sr = itemObj.AddComponent<SpriteRenderer>();
+            
+            // URP 2D Unlit Material ata (Görünürlük için kritik!)
+            Shader unlitShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+            if (unlitShader != null)
+            {
+                sr.material = new Material(unlitShader);
+            }
+            
             sr.sortingOrder = 5; // Önde dursun
             
             itemObj.AddComponent<BoxCollider2D>();
@@ -179,7 +194,7 @@ public class GridManager : MonoBehaviour
 
     private Sprite CreateCellSprite(Color backgroundColor, Color borderColor, int borderThickness = 4, int width = 128, int height = 128)
     {
-        Texture2D texture = new Texture2D(width, height);
+        Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
         Color[] pixels = new Color[width * height];
         
         for (int y = 0; y < height; y++)

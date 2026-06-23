@@ -66,7 +66,7 @@ public class MergeItem : MonoBehaviour
     private Sprite CreateCircleSprite(int radius = 64)
     {
         int size = radius * 2;
-        Texture2D texture = new Texture2D(size, size);
+        Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
         Color[] pixels = new Color[size * size];
         
         // Şeffaf arka plan
