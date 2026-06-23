@@ -45,52 +45,20 @@ public class GridManager : MonoBehaviour
     private void Start()
     {
         SetupDynamicPrefabs();
-        GenerateGrid();
-        SpawnInitialItems();
         SpawnScatteredItems();
         SpawnRestorationTargets();
     }
 
-    private void GenerateGrid()
-    {
-        // Envanter Tepsisi en alta (yOffset = -4.3f) yerleştirilir
-        float startX = -(width - 1) * cellSize / 2f;
-        float startY = -4.3f;
-
-        for (int x = 0; x < width; x++)
-        {
-            Vector3 spawnPos = new Vector3(startX + x * cellSize, startY, 0);
-            GameObject cellObj = Instantiate(cellPrefab, spawnPos, Quaternion.identity, transform);
-            cellObj.SetActive(true);
-            cellObj.name = $"Slot_{x}";
-
-            GridCell cell = cellObj.GetComponent<GridCell>();
-            cell.gridX = x;
-            cell.gridY = 0;
-            allCells.Add(cell);
-        }
-    }
-
-    private void SpawnInitialItems()
-    {
-        // Çizim rulosunu en sağ slota hizalayarak en alta (2.7f, -4.3f, 0f) yerleştir
-        Vector3 blueprintPos = new Vector3(2.7f, -4.3f, 0f);
-        GameObject itemObj = Instantiate(itemPrefab, blueprintPos, Quaternion.identity);
-        itemObj.SetActive(true);
-        MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
-        mergeItem.Initialize(toolboxData, null);
-    }
-
     private void SpawnScatteredItems()
     {
-        // 5 başlangıç eşyasını bahçenin doğal yerlerine dağıtılmış olarak spawn et
+        // 5 başlangıç restorasyon malzemesini bahçenin zeminindeki doğal noktalara dağıtılmış olarak yerleştir
         Vector3[] scatterPositions = new Vector3[]
         {
-            new Vector3(-2.3f, 0.2f, 0f),  // Sol bahçe alanı
-            new Vector3(2.3f, 2.1f, 0f),   // Sağ üst bahçe yolu
-            new Vector3(-2.0f, -1.8f, 0f), // Sol alt yeşillik
-            new Vector3(2.4f, -1.2f, 0f),  // Sağ alt patika
-            new Vector3(0.7f, 0.5f, 0f)    // Havuzun sağ kenarı
+            new Vector3(-2.3f, -2.5f, 0f), // Sol taraftaki ev girişinin yanı (Fırça)
+            new Vector3(1.8f, -2.3f, 0f),  // Çeşmenin sağ tarafı (Kireç Harcı Kovası)
+            new Vector3(-1.2f, -3.4f, 0f), // Sol alt patika zemin (Restorasyon Karosu)
+            new Vector3(2.2f, -3.2f, 0f),  // Sağ alt bahçe patikası zemin (Mermer Blok)
+            new Vector3(0.5f, -1.8f, 0f)   // Çeşmenin hemen yanı (Antik Musluk)
         };
 
         ItemData[] itemsToScatter = new ItemData[]

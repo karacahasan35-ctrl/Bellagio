@@ -53,6 +53,9 @@ public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoin
             spriteRenderer.color = itemData.itemColor;
             spriteRenderer.sprite = RestorationSpriteFactory.GetSprite(itemData.itemChainName, itemData.level, itemData.isGenerator);
             
+            // Eşyaların bahçede çok kaba durmasını engellemek için ölçeğini 0.6f yap
+            transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+
             // Collider boyutunu sprite sınırlarına göre otomatik ayarla
             if (spriteRenderer.sprite != null && boxCollider != null)
             {
@@ -125,7 +128,7 @@ public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoin
 
         isDragging = true;
         originalPosition = currentCell != null ? currentCell.transform.position : transform.position;
-        transform.localScale = Vector3.one * 1.15f;
+        transform.localScale = new Vector3(0.7f, 0.7f, 1f); // Drag esnasında hafif büyüme
 
         Vector3 pointerWorldPos = GetWorldPositionOfPointer(eventData);
         offset = transform.position - pointerWorldPos;
@@ -147,7 +150,7 @@ public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoin
         if (!isDragging) return;
         isDragging = false;
         spriteRenderer.sortingOrder = 5;
-        transform.localScale = Vector3.one;
+        transform.localScale = new Vector3(0.6f, 0.6f, 1f);
 
         // 1. Hotspot (RestorationTarget) kontrolü yap!
         RestorationTarget target = GetRestorationTargetUnderMouse();
@@ -215,13 +218,14 @@ public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoin
     {
         float duration = 0.2f;
         float elapsed = 0f;
+        Vector3 targetScale = new Vector3(0.6f, 0.6f, 1f);
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one, elapsed / duration);
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, elapsed / duration);
             yield return null;
         }
-        transform.localScale = Vector3.one;
+        transform.localScale = targetScale;
     }
 
     private void SnapTo(Vector3 targetPosition)

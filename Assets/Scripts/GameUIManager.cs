@@ -69,9 +69,7 @@ public class GameUIManager : MonoBehaviour
         canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         var scaler = canvasObj.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1080, 1920);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // 2. Üst HUD Paneli
@@ -470,20 +468,18 @@ public class GameUIManager : MonoBehaviour
         {
             leylaCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
             canCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla can
-            transcriptText.text = "Hazal: \"Eşim Hasan ile birlikte Ege'deki bu güzel bahçeli villayı restore etmek için sabırsızlanıyoruz! 25 yaşındayız ve her ikimiz de mimarız. Hassas mühendislik kuralları ve doğru malzemelerle bu harika evi eski ihtişamına kavuşturacağız. Hazırsanız başlayalım!\"";
+            transcriptText.text = "Hazal: \"Eşim Hasan ile birlikte Ege'deki bu güzel bahçeli villayı restore etmek için sabırsızlanıyoruz! 25 yaşındayız ve her ikimiz de mimarız. Bahçeye dağıtılmış malzemeleri doğrudan sürükleyip üzerlerindeki hedeflere bırakarak evi yenileyeceğiz. Başlayalım!\"";
         }
         else
         {
             canCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
             leylaCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla leyla
-            transcriptText.text = "Hasan: \"Eşim Hazal ile birlikte bu projede çalışmak harika! 25 yaşındayız ve Ege'nin bu eşsiz mimarisini canlandırmak bizim en büyük hayalimiz. Çizim rulosuna (blueprint) tıklayarak aletleri üretip villamızın bahçesindeki hedeflere sürükle ve bize katıl!\"";
+            transcriptText.text = "Hasan: \"Eşim Hazal ile birlikte bu projede çalışmak harika! 25 yaşındayız ve Ege'nin bu eşsiz mimarisini canlandırmak bizim en büyük hayalimiz. Bahçede duran alet ve malzemeleri tutup doğrudan hedeflere sürükleyerek bize katıl!\"";
         }
 
         // Oyun içi avatarları ve konuşmaları ayarla
         gameAvatarImage.sprite = RestorationSpriteFactory.GetSprite($"Avatar{character}", 1, false);
-        gameSpeechText.text = character == "Hasan" 
-            ? "Çizim rulosuna tıklayarak alet üret ve hedeflere sürükle!" 
-            : "Çizim rulosunu kullanarak malzemeleri yerleştir.";
+        gameSpeechText.text = "Bahçedeki alet ve malzemeleri doğrudan hedeflere sürükle!";
     }
 
     private void CreateEventSystem()
