@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      clean_courtyard_0: 988600446977410712
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -71,7 +71,7 @@ public class RenovationManager : MonoBehaviour
         Color c = cleanRenderer.color;
         cleanRenderer.color = new Color(c.r, c.g, c.b, progress);
         
-        Debug.Log($"[RenovationManager] Avlu temizlik ilerlemesi: %{progress * 100} (Şeffaflık: {progress})");
+        Debug.Log($"[RenovationManager] Villa bahçesi temizlik ilerlemesi: %{progress * 100} (Şeffaflık: {progress})");
     }
 
     public bool hasPot = false;

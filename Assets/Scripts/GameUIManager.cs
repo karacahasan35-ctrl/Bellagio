@@ -5,12 +5,14 @@ public class GameUIManager : MonoBehaviour
 {
     public static GameUIManager Instance { get; private set; }
 
-    public static string selectedCharacter = ""; // "Can" or "Leyla"
+    public static string selectedCharacter = ""; // "Hasan" or "Hazal"
     
     private Canvas canvas;
     private Text goldText;
     private Text starText;
     private Text progressText;
+    private GameObject tooltipPanelObj;
+    private Text tooltipTextComponent;
     
     // Start Menu / Character Select UI
     private GameObject startMenuPanel;
@@ -82,10 +84,50 @@ public class GameUIManager : MonoBehaviour
         Image hudBg = hudPanelObj.AddComponent<Image>();
         hudBg.color = new Color(0.08f, 0.08f, 0.1f, 0.95f); // Premium metalik koyu renk
 
-        // HUD Yazıları (Altın, Yıldız, İlerleme)
-        goldText = CreateText(hudPanelObj, "GoldText", "ALTIN: 500", new Vector2(-160, 0), Color.yellow, 20);
-        starText = CreateText(hudPanelObj, "StarText", "YILDIZ: 0", new Vector2(0, 0), new Color(0.2f, 0.8f, 1f), 20);
-        progressText = CreateText(hudPanelObj, "ProgressText", "İLERLEME: %0", new Vector2(160, 0), Color.green, 20);
+        // HUD Yazıları (Altın ve Yıldız Simgeleri ile ve İlerleme)
+        CreateHUDIconGroup(hudPanelObj, "GoldGroup", "GoldIcon", new Vector2(0.04f, 0.5f), 0f, out goldText, "Gold");
+        CreateHUDIconGroup(hudPanelObj, "StarGroup", "StarIcon", new Vector2(0.28f, 0.5f), 0f, out starText, "Star");
+
+        // Progress Group
+        GameObject progressGroup = new GameObject("ProgressGroup");
+        progressGroup.transform.SetParent(hudPanelObj.transform);
+        RectTransform progressRt = progressGroup.AddComponent<RectTransform>();
+        progressRt.anchorMin = new Vector2(0.52f, 0.5f);
+        progressRt.anchorMax = new Vector2(0.52f, 0.5f);
+        progressRt.pivot = new Vector2(0, 0.5f);
+        progressRt.anchoredPosition = Vector2.zero;
+        progressRt.sizeDelta = new Vector2(120, 50);
+
+        progressText = CreateText(progressGroup, "ProgressText", "İLERLEME: %0", Vector2.zero, Color.green, 18);
+        progressText.alignment = TextAnchor.MiddleLeft;
+
+        // Tooltip Paneli (Canvas üzerinde)
+        tooltipPanelObj = new GameObject("TooltipPanel");
+        tooltipPanelObj.transform.SetParent(canvasObj.transform);
+        RectTransform tooltipRt = tooltipPanelObj.AddComponent<RectTransform>();
+        tooltipRt.anchorMin = new Vector2(0, 0);
+        tooltipRt.anchorMax = new Vector2(0, 0);
+        tooltipRt.pivot = new Vector2(0.5f, 1f);
+        tooltipRt.sizeDelta = new Vector2(80, 26);
+        
+        Image tooltipBg = tooltipPanelObj.AddComponent<Image>();
+        tooltipBg.color = new Color(0f, 0f, 0f, 0.85f);
+        
+        GameObject tooltipTxtObj = new GameObject("TooltipText");
+        tooltipTxtObj.transform.SetParent(tooltipPanelObj.transform);
+        RectTransform tTxtRt = tooltipTxtObj.AddComponent<RectTransform>();
+        tTxtRt.anchorMin = Vector2.zero;
+        tTxtRt.anchorMax = Vector2.one;
+        tTxtRt.offsetMin = Vector2.zero;
+        tTxtRt.offsetMax = Vector2.zero;
+        
+        tooltipTextComponent = tooltipTxtObj.AddComponent<Text>();
+        tooltipTextComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        tooltipTextComponent.fontSize = 13;
+        tooltipTextComponent.color = Color.white;
+        tooltipTextComponent.alignment = TextAnchor.MiddleCenter;
+        
+        tooltipPanelObj.SetActive(false);
 
         // MARKET Butonu
         GameObject marketBtnObj = new GameObject("MarketButton");
@@ -160,7 +202,7 @@ public class GameUIManager : MonoBehaviour
         gameSpeechText.fontSize = 12;
         gameSpeechText.color = Color.white;
         gameSpeechText.alignment = TextAnchor.MiddleLeft;
-        gameSpeechText.text = "Aletleri hedeflere sürükle!";
+        gameSpeechText.text = "Çizim rulosunu kullanarak malzemeleri yerleştir.";
 
         // Başlangıçta karakter seçilmediği için bu paneli gizliyoruz
         speechBubbleObj.SetActive(false);
@@ -188,7 +230,7 @@ public class GameUIManager : MonoBehaviour
 
         CreateText(marketPanel, "MarketTitle", "DEKORASYON DÜKKANI", new Vector2(0, 140), new Color(0.9f, 0.75f, 0.15f, 1f), 22);
 
-        marketStatusText = CreateText(marketPanel, "MarketStatusText", "Avluya eklemek için dekor satın alabilirsiniz.", new Vector2(0, 105), Color.gray, 14);
+        marketStatusText = CreateText(marketPanel, "MarketStatusText", "Bahçeye eklemek için dekor satın alabilirsiniz.", new Vector2(0, 105), Color.gray, 14);
 
         // Dekor 1: Saksı
         CreateMarketItem(marketPanel, "Saksı", "FlowerPot", "100 Altın", new Vector2(0, 40), () => TryBuyDecoration("FlowerPot", 100, 0));
@@ -265,14 +307,14 @@ public class GameUIManager : MonoBehaviour
             TaskManager.Instance.currentStars -= starCost;
 
             RenovationManager.Instance.BuyDecoration(type);
-            marketStatusText.text = $"Muhteşem! {type} başarıyla avluya yerleştirildi.";
+            marketStatusText.text = $"Muhteşem! {type} başarıyla bahçeye yerleştirildi.";
             marketStatusText.color = Color.green;
 
             UpdateHUD();
             
             // Karakter diyaloğunu güncelle
-            SetSpeechText(selectedCharacter == "Can" 
-                ? "Harika bir seçim! Avlu gittikçe zenginleşiyor." 
+            SetSpeechText(selectedCharacter == "Hasan" 
+                ? "Harika bir seçim! Bahçemiz gittikçe zenginleşiyor." 
                 : "Harika! Yeni dekorasyon villanın estetiğine çok uydu.");
         }
         else
@@ -302,7 +344,7 @@ public class GameUIManager : MonoBehaviour
         // Mimar Seçim Başlığı
         CreateText(startMenuPanel, "SelectTitle", "Restorasyon Mimarını Seçiniz:", new Vector2(0, 140), Color.white, 16);
 
-        // LEYLA SEÇİM KARTI
+        // LEYLA SEÇİM KARTI (Hazal)
         GameObject leylaCard = new GameObject("LeylaCard");
         leylaCard.transform.SetParent(startMenuPanel.transform);
         RectTransform lcRt = leylaCard.AddComponent<RectTransform>();
@@ -311,7 +353,7 @@ public class GameUIManager : MonoBehaviour
         leylaCardBg = leylaCard.AddComponent<Image>();
         leylaCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Seçilmemiş kart rengi
         Button leylaBtn = leylaCard.AddComponent<Button>();
-        leylaBtn.onClick.AddListener(() => OnSelectCharacter("Leyla"));
+        leylaBtn.onClick.AddListener(() => OnSelectCharacter("Hazal"));
 
         GameObject leylaAvatar = new GameObject("Avatar");
         leylaAvatar.transform.SetParent(leylaCard.transform);
@@ -319,11 +361,11 @@ public class GameUIManager : MonoBehaviour
         laRt.anchoredPosition = new Vector2(0, 20);
         laRt.sizeDelta = new Vector2(60, 60);
         Image laImg = leylaAvatar.AddComponent<Image>();
-        laImg.sprite = RestorationSpriteFactory.GetSprite("AvatarLeyla", 1, false);
-        CreateText(leylaCard, "Name", "Mimar Leyla", new Vector2(0, -25), Color.white, 14);
-        CreateText(leylaCard, "Role", "(Hassasiyet)", new Vector2(0, -45), Color.gray, 11);
+        laImg.sprite = RestorationSpriteFactory.GetSprite("AvatarHazal", 1, false);
+        CreateText(leylaCard, "Name", "Mimar Hazal", new Vector2(0, -25), Color.white, 14);
+        CreateText(leylaCard, "Role", "25 Yaşında (Evli)", new Vector2(0, -45), Color.gray, 11);
 
-        // CAN SEÇİM KARTI
+        // CAN SEÇİM KARTI (Hasan)
         GameObject canCard = new GameObject("CanCard");
         canCard.transform.SetParent(startMenuPanel.transform);
         RectTransform ccRt = canCard.AddComponent<RectTransform>();
@@ -332,7 +374,7 @@ public class GameUIManager : MonoBehaviour
         canCardBg = canCard.AddComponent<Image>();
         canCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f);
         Button canBtn = canCard.AddComponent<Button>();
-        canBtn.onClick.AddListener(() => OnSelectCharacter("Can"));
+        canBtn.onClick.AddListener(() => OnSelectCharacter("Hasan"));
 
         GameObject canAvatar = new GameObject("Avatar");
         canAvatar.transform.SetParent(canCard.transform);
@@ -340,9 +382,9 @@ public class GameUIManager : MonoBehaviour
         caRt.anchoredPosition = new Vector2(0, 20);
         caRt.sizeDelta = new Vector2(60, 60);
         Image caImg = canAvatar.AddComponent<Image>();
-        caImg.sprite = RestorationSpriteFactory.GetSprite("AvatarCan", 1, false);
-        CreateText(canCard, "Name", "Mimar Can", new Vector2(0, -25), Color.white, 14);
-        CreateText(canCard, "Role", "(Tutku)", new Vector2(0, -45), Color.gray, 11);
+        caImg.sprite = RestorationSpriteFactory.GetSprite("AvatarHasan", 1, false);
+        CreateText(canCard, "Name", "Mimar Hasan", new Vector2(0, -25), Color.white, 14);
+        CreateText(canCard, "Role", "25 Yaşında (Evli)", new Vector2(0, -45), Color.gray, 11);
 
         // TRANSCRIPT DIYALOG ALANI
         GameObject speechObj = new GameObject("WelcomeSpeechBox");
@@ -382,24 +424,24 @@ public class GameUIManager : MonoBehaviour
         startRestorationButton.interactable = true;
         startRestorationButton.GetComponent<Image>().color = new Color(0.15f, 0.6f, 0.3f, 1f); // Aktif yeşil buton
 
-        if (character == "Leyla")
+        if (character == "Hazal")
         {
             leylaCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
             canCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla can
-            transcriptText.text = "Leyla: \"Teknik restorasyona hoş geldiniz. Hassas mühendislik kuralları ve doğru malzemelerle bu avluyu şahesere dönüştüreceğiz. Hazırsanız başlayalım!\"";
+            transcriptText.text = "Hazal: \"Eşim Hasan ile birlikte Ege'deki bu güzel bahçeli villayı restore etmek için sabırsızlanıyoruz! 25 yaşındayız ve her ikimiz de mimarız. Hassas mühendislik kuralları ve doğru malzemelerle bu harika evi eski ihtişamına kavuşturacağız. Hazırsanız başlayalım!\"";
         }
         else
         {
             canCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
             leylaCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla leyla
-            transcriptText.text = "Can: \"Hey merhaba! Ben Can. Antik yapıları canlandırmak benim hayatım. Eşyaları avludaki yerlerine taşıyıp bu harika villayı birlikte kurtaralım!\"";
+            transcriptText.text = "Hasan: \"Eşim Hazal ile birlikte bu projede çalışmak harika! 25 yaşındayız ve Ege'nin bu eşsiz mimarisini canlandırmak bizim en büyük hayalimiz. Çizim rulosuna (blueprint) tıklayarak aletleri üretip villamızın bahçesindeki hedeflere sürükle ve bize katıl!\"";
         }
 
         // Oyun içi avatarları ve konuşmaları ayarla
         gameAvatarImage.sprite = RestorationSpriteFactory.GetSprite($"Avatar{character}", 1, false);
-        gameSpeechText.text = character == "Can" 
-            ? "Çantaya tıklayarak alet üret ve hedeflere sürükle!" 
-            : "Alet çantasını kullanarak malzemeleri yerleştir.";
+        gameSpeechText.text = character == "Hasan" 
+            ? "Çizim rulosuna tıklayarak alet üret ve hedeflere sürükle!" 
+            : "Çizim rulosunu kullanarak malzemeleri yerleştir.";
     }
 
     private void CreateEventSystem()
@@ -443,11 +485,74 @@ public class GameUIManager : MonoBehaviour
     {
         if (TaskManager.Instance == null || goldText == null) return;
 
-        goldText.text = $"ALTIN: {TaskManager.Instance.currentGold}";
-        starText.text = $"YILDIZ: {TaskManager.Instance.currentStars}";
+        goldText.text = TaskManager.Instance.currentGold.ToString();
+        starText.text = TaskManager.Instance.currentStars.ToString();
         
         float progress = TaskManager.Instance.GetRenovationProgress();
         progressText.text = $"İLERLEME: %{Mathf.RoundToInt(progress * 100)}";
+    }
+
+    public void ShowTooltip(string text, Vector3 position)
+    {
+        if (tooltipPanelObj != null && tooltipTextComponent != null)
+        {
+            tooltipPanelObj.SetActive(true);
+            tooltipTextComponent.text = text;
+            tooltipPanelObj.transform.position = position + new Vector3(0f, -40f, 0f);
+        }
+    }
+
+    public void HideTooltip()
+    {
+        if (tooltipPanelObj != null)
+        {
+            tooltipPanelObj.SetActive(false);
+        }
+    }
+
+    private GameObject CreateHUDIconGroup(GameObject parent, string name, string iconChainName, Vector2 anchor, float xOffset, out Text valueText, string tooltipText)
+    {
+        GameObject group = new GameObject(name);
+        group.transform.SetParent(parent.transform);
+        RectTransform rt = group.AddComponent<RectTransform>();
+        rt.anchorMin = anchor;
+        rt.anchorMax = anchor;
+        rt.pivot = new Vector2(0, 0.5f);
+        rt.anchoredPosition = new Vector2(xOffset, 0);
+        rt.sizeDelta = new Vector2(110, 50);
+
+        // Icon
+        GameObject iconObj = new GameObject("Icon");
+        iconObj.transform.SetParent(group.transform);
+        RectTransform iconRt = iconObj.AddComponent<RectTransform>();
+        iconRt.anchorMin = new Vector2(0, 0.5f);
+        iconRt.anchorMax = new Vector2(0, 0.5f);
+        iconRt.pivot = new Vector2(0, 0.5f);
+        iconRt.anchoredPosition = Vector2.zero;
+        iconRt.sizeDelta = new Vector2(30, 30);
+        Image img = iconObj.AddComponent<Image>();
+        img.sprite = RestorationSpriteFactory.GetSprite(iconChainName, 1, false);
+
+        // Tooltip handler
+        var tooltip = iconObj.AddComponent<UITooltipHandler>();
+        tooltip.tooltipText = tooltipText;
+
+        // Text
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(group.transform);
+        RectTransform textRt = textObj.AddComponent<RectTransform>();
+        textRt.anchorMin = new Vector2(0, 0.5f);
+        textRt.anchorMax = new Vector2(0, 0.5f);
+        textRt.pivot = new Vector2(0, 0.5f);
+        textRt.anchoredPosition = new Vector2(35, 0);
+        textRt.sizeDelta = new Vector2(75, 30);
+        valueText = textObj.AddComponent<Text>();
+        valueText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        valueText.fontSize = 18;
+        valueText.color = Color.white;
+        valueText.alignment = TextAnchor.MiddleLeft;
+
+        return group;
     }
 
     public void ShowStartMenu()
@@ -471,7 +576,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (marketPanel != null)
         {
-            marketStatusText.text = "Avluya eklemek için dekor satın alabilirsiniz.";
+            marketStatusText.text = "Bahçeye eklemek için dekor satın alabilirsiniz.";
             marketStatusText.color = Color.gray;
             marketPanel.SetActive(true);
         }

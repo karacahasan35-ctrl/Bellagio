@@ -72,9 +72,9 @@ public class GridManager : MonoBehaviour
 
     private void SpawnInitialItems()
     {
-        // Sol tarafa 1 adet "Restorasyon Alet Çantası" yerleştir (Yuvadan bağımsız)
-        Vector3 toolboxPos = new Vector3(-3.0f, -3.5f, 0f);
-        GameObject itemObj = Instantiate(itemPrefab, toolboxPos, Quaternion.identity);
+        // Alttaki envanter tepsisinin ortasında (0f, -2.5f, 0f) konumuna Çizim Rulosu yerleştir
+        Vector3 blueprintPos = new Vector3(0f, -2.5f, 0f);
+        GameObject itemObj = Instantiate(itemPrefab, blueprintPos, Quaternion.identity);
         itemObj.SetActive(true);
         MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
         mergeItem.Initialize(toolboxData, null);
@@ -256,11 +256,11 @@ public class GridManager : MonoBehaviour
 
     private void CreateRealisticItems()
     {
-        // 1. Toolbox (Generator)
+        // 1. BlueprintRoll (Generator)
         toolboxData = ScriptableObject.CreateInstance<ItemData>();
-        toolboxData.name = "ToolboxData";
-        toolboxData.itemName = "Restorasyon Alet Çantası";
-        toolboxData.itemChainName = "Toolbox";
+        toolboxData.name = "BlueprintData";
+        toolboxData.itemName = "Çizim Rulosu";
+        toolboxData.itemChainName = "BlueprintRoll";
         toolboxData.level = 1;
         toolboxData.isGenerator = true;
         toolboxData.itemColor = Color.white;

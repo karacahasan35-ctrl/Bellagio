@@ -133,7 +133,7 @@ public class RestorationTarget : MonoBehaviour
         string charName = GameUIManager.selectedCharacter;
         string feedback = "";
 
-        if (charName == "Can")
+        if (charName == "Hasan")
         {
             if (taskId == "t1") feedback = "Harika! Zemin kalıntılarını süpürüp temizledik.";
             else if (taskId == "t2") feedback = "Çatlakları kireç harcıyla doldurdum, taş gibi oldu!";
@@ -141,7 +141,7 @@ public class RestorationTarget : MonoBehaviour
             else if (taskId == "t4") feedback = "Sütunlar mermer bloklarla sapasağlam oldu.";
             else if (taskId == "t5") feedback = "Musluk takıldı! Antik havuzumuzda su akıyor artık!";
         }
-        else // Leyla
+        else // Hazal
         {
             if (taskId == "t1") feedback = "Toz ve molozlar temizlendi, yüzey hassas onarıma hazır.";
             else if (taskId == "t2") feedback = "Doğal harç çatlakları kapattı, yapısal bütünlük korundu.";

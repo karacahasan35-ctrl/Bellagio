@@ -13,7 +13,7 @@ public static class RestorationSpriteFactory
 
         if (isGenerator)
         {
-            DrawToolbox(pixels, size);
+            DrawBlueprintRoll(pixels, size);
         }
         else if (chainName == "Tool")
         {
@@ -44,13 +44,21 @@ public static class RestorationSpriteFactory
         {
             DrawLantern(pixels, size);
         }
-        else if (chainName == "AvatarCan")
+        else if (chainName == "AvatarHasan")
         {
-            DrawAvatarCan(pixels, size);
+            DrawAvatarHasan(pixels, size);
         }
-        else if (chainName == "AvatarLeyla")
+        else if (chainName == "AvatarHazal")
         {
-            DrawAvatarLeyla(pixels, size);
+            DrawAvatarHazal(pixels, size);
+        }
+        else if (chainName == "GoldIcon")
+        {
+            DrawGoldIcon(pixels, size);
+        }
+        else if (chainName == "StarIcon")
+        {
+            DrawStarIcon(pixels, size);
         }
         else
         {
@@ -70,7 +78,7 @@ public static class RestorationSpriteFactory
         texture.Apply();
         
         Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
-        sprite.name = isGenerator ? "Toolbox" : $"{chainName}_Lvl{level}";
+        sprite.name = isGenerator ? "BlueprintRoll" : $"{chainName}_Lvl{level}";
         return sprite;
     }
 
@@ -407,7 +415,7 @@ public static class RestorationSpriteFactory
         FillRect(pixels, size, 58, 92, 12, 8, iron);
     }
 
-    private static void DrawAvatarCan(Color[] pixels, int size)
+    private static void DrawAvatarHasan(Color[] pixels, int size)
     {
         Color skin = new Color(0.98f, 0.82f, 0.68f, 1f);
         Color hair = new Color(0.42f, 0.23f, 0.1f, 1f);
@@ -436,7 +444,7 @@ public static class RestorationSpriteFactory
         FillRect(pixels, size, 40, 84, 48, 16, hat);
     }
 
-    private static void DrawAvatarLeyla(Color[] pixels, int size)
+    private static void DrawAvatarHazal(Color[] pixels, int size)
     {
         Color skin = new Color(0.98f, 0.8f, 0.65f, 1f);
         Color hair = new Color(0.15f, 0.15f, 0.18f, 1f);
@@ -462,5 +470,101 @@ public static class RestorationSpriteFactory
 
         // Saç üst/perçem
         FillRect(pixels, size, 44, 76, 40, 8, hair);
+    }
+
+    private static void DrawGoldIcon(Color[] pixels, int size)
+    {
+        Color gold = new Color(0.95f, 0.8f, 0.1f, 1f);
+        Color darkGold = new Color(0.6f, 0.45f, 0.05f, 1f);
+        Color shine = new Color(1f, 0.95f, 0.7f, 1f);
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x - size / 2f;
+                float dy = y - size / 2f;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                if (dist <= 48f)
+                {
+                    if (dist > 44f)
+                    {
+                        pixels[y * size + x] = darkGold;
+                    }
+                    else if (dist > 38f)
+                    {
+                        pixels[y * size + x] = gold;
+                    }
+                    else if (dist <= 8f && dx < 4f && dy > -4f)
+                    {
+                        pixels[y * size + x] = shine;
+                    }
+                    else
+                    {
+                        if (dist > 32f && dist < 35f)
+                        {
+                            pixels[y * size + x] = darkGold;
+                        }
+                        else
+                        {
+                            pixels[y * size + x] = gold;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void DrawStarIcon(Color[] pixels, int size)
+    {
+        Color yellow = new Color(1f, 0.88f, 0.2f, 1f);
+        Vector2 center = new Vector2(size / 2f, size / 2f);
+        float R = 46f;
+        float r = 18f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                Vector2 p = new Vector2(x, y);
+                if (IsPointInStar(p, center, 5, R, r))
+                {
+                    pixels[y * size + x] = yellow;
+                }
+            }
+        }
+    }
+
+    private static bool IsPointInStar(Vector2 p, Vector2 center, int numPoints, float R, float r)
+    {
+        Vector2 rel = p - center;
+        float angle = Mathf.Atan2(rel.y, rel.x);
+        float dist = rel.magnitude;
+
+        float section = 2 * Mathf.PI / numPoints;
+        float localAngle = angle - section * Mathf.Floor(angle / section);
+
+        float halfSec = section / 2f;
+        float dMax = R * r / (r + (R - r) * Mathf.Abs(Mathf.Sin(localAngle - halfSec)) / Mathf.Sin(halfSec));
+        return dist <= dMax;
+    }
+
+    private static void DrawBlueprintRoll(Color[] pixels, int size)
+    {
+        Color blue = new Color(0.12f, 0.36f, 0.72f, 1f);
+        Color lightBlue = new Color(0.35f, 0.6f, 0.95f, 1f);
+        Color white = Color.white;
+        Color ribbon = new Color(0.9f, 0.75f, 0.15f, 1f);
+
+        FillRect(pixels, size, 24, 40, 80, 48, blue);
+        FillRect(pixels, size, 24, 82, 80, 4, lightBlue);
+        FillRect(pixels, size, 24, 40, 80, 4, new Color(0.08f, 0.24f, 0.5f, 1f));
+        FillRect(pixels, size, 58, 40, 12, 48, ribbon);
+
+        FillRect(pixels, size, 20, 38, 4, 52, white);
+        FillRect(pixels, size, 104, 38, 4, 52, white);
+        FillRect(pixels, size, 21, 46, 2, 36, blue);
+        FillRect(pixels, size, 105, 46, 2, 36, blue);
     }
 }

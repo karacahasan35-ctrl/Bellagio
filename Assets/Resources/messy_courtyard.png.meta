@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      messy_courtyard_0: -3039085519330900357
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
