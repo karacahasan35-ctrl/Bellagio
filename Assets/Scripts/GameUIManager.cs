@@ -68,7 +68,10 @@ public class GameUIManager : MonoBehaviour
         canvasObj.transform.SetParent(transform);
         canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>();
+        var scaler = canvasObj.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1080, 1920);
+        scaler.matchWidthOrHeight = 0.5f;
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // 2. Üst HUD Paneli
@@ -84,22 +87,41 @@ public class GameUIManager : MonoBehaviour
         Image hudBg = hudPanelObj.AddComponent<Image>();
         hudBg.color = new Color(0.08f, 0.08f, 0.1f, 0.95f); // Premium metalik koyu renk
 
+        // HUD Sol Panel (Altın, Yıldız, İlerleme)
+        GameObject leftHud = new GameObject("LeftHUD");
+        leftHud.transform.SetParent(hudPanelObj.transform);
+        RectTransform leftRt = leftHud.AddComponent<RectTransform>();
+        leftRt.anchorMin = new Vector2(0, 0);
+        leftRt.anchorMax = new Vector2(0.7f, 1);
+        leftRt.offsetMin = Vector2.zero;
+        leftRt.offsetMax = Vector2.zero;
+
+        HorizontalLayoutGroup leftLayout = leftHud.AddComponent<HorizontalLayoutGroup>();
+        leftLayout.padding = new RectOffset(15, 0, 0, 0);
+        leftLayout.spacing = 15;
+        leftLayout.childAlignment = TextAnchor.MiddleLeft;
+        leftLayout.childControlWidth = false;
+        leftLayout.childControlHeight = false;
+        leftLayout.childForceExpandWidth = false;
+        leftLayout.childForceExpandHeight = false;
+
         // HUD Yazıları (Altın ve Yıldız Simgeleri ile ve İlerleme)
-        CreateHUDIconGroup(hudPanelObj, "GoldGroup", "GoldIcon", new Vector2(0.04f, 0.5f), 0f, out goldText, "Gold");
-        CreateHUDIconGroup(hudPanelObj, "StarGroup", "StarIcon", new Vector2(0.28f, 0.5f), 0f, out starText, "Star");
+        CreateHUDIconGroup(leftHud, "GoldGroup", "GoldIcon", out goldText, "Gold");
+        CreateHUDIconGroup(leftHud, "StarGroup", "StarIcon", out starText, "Star");
 
         // Progress Group
         GameObject progressGroup = new GameObject("ProgressGroup");
-        progressGroup.transform.SetParent(hudPanelObj.transform);
+        progressGroup.transform.SetParent(leftHud.transform);
         RectTransform progressRt = progressGroup.AddComponent<RectTransform>();
-        progressRt.anchorMin = new Vector2(0.52f, 0.5f);
-        progressRt.anchorMax = new Vector2(0.52f, 0.5f);
-        progressRt.pivot = new Vector2(0, 0.5f);
-        progressRt.anchoredPosition = Vector2.zero;
-        progressRt.sizeDelta = new Vector2(120, 50);
+        progressRt.sizeDelta = new Vector2(110, 40);
 
-        progressText = CreateText(progressGroup, "ProgressText", "İLERLEME: %0", Vector2.zero, Color.green, 18);
+        progressText = CreateText(progressGroup, "ProgressText", "İLERLEME: %0", Vector2.zero, Color.green, 16);
         progressText.alignment = TextAnchor.MiddleLeft;
+        RectTransform progressTextRt = progressText.GetComponent<RectTransform>();
+        progressTextRt.anchorMin = Vector2.zero;
+        progressTextRt.anchorMax = Vector2.one;
+        progressTextRt.offsetMin = Vector2.zero;
+        progressTextRt.offsetMax = Vector2.zero;
 
         // Tooltip Paneli (Canvas üzerinde)
         tooltipPanelObj = new GameObject("TooltipPanel");
@@ -129,14 +151,28 @@ public class GameUIManager : MonoBehaviour
         
         tooltipPanelObj.SetActive(false);
 
+        // HUD Sağ Panel (Market ve Yardım Butonları)
+        GameObject rightHud = new GameObject("RightHUD");
+        rightHud.transform.SetParent(hudPanelObj.transform);
+        RectTransform rightRt = rightHud.AddComponent<RectTransform>();
+        rightRt.anchorMin = new Vector2(0.7f, 0);
+        rightRt.anchorMax = new Vector2(1, 1);
+        rightRt.offsetMin = Vector2.zero;
+        rightRt.offsetMax = Vector2.zero;
+
+        HorizontalLayoutGroup rightLayout = rightHud.AddComponent<HorizontalLayoutGroup>();
+        rightLayout.padding = new RectOffset(0, 15, 0, 0);
+        rightLayout.spacing = 10;
+        rightLayout.childAlignment = TextAnchor.MiddleRight;
+        rightLayout.childControlWidth = false;
+        rightLayout.childControlHeight = false;
+        rightLayout.childForceExpandWidth = false;
+        rightLayout.childForceExpandHeight = false;
+
         // MARKET Butonu
         GameObject marketBtnObj = new GameObject("MarketButton");
-        marketBtnObj.transform.SetParent(hudPanelObj.transform);
+        marketBtnObj.transform.SetParent(rightHud.transform);
         RectTransform marketRt = marketBtnObj.AddComponent<RectTransform>();
-        marketRt.anchorMin = new Vector2(1, 0.5f);
-        marketRt.anchorMax = new Vector2(1, 0.5f);
-        marketRt.pivot = new Vector2(1, 0.5f);
-        marketRt.anchoredPosition = new Vector2(-70, 0);
         marketRt.sizeDelta = new Vector2(90, 40);
 
         Image marketImg = marketBtnObj.AddComponent<Image>();
@@ -145,16 +181,17 @@ public class GameUIManager : MonoBehaviour
         Button marketButton = marketBtnObj.AddComponent<Button>();
         Text marketBtnText = CreateText(marketBtnObj, "MarketBtnText", "MARKET", Vector2.zero, Color.white, 14);
         marketBtnText.alignment = TextAnchor.MiddleCenter;
+        RectTransform mTxtRt = marketBtnText.GetComponent<RectTransform>();
+        mTxtRt.anchorMin = Vector2.zero;
+        mTxtRt.anchorMax = Vector2.one;
+        mTxtRt.offsetMin = Vector2.zero;
+        mTxtRt.offsetMax = Vector2.zero;
         marketButton.onClick.AddListener(ShowMarketPanel);
 
         // YARDIM Butonu (?)
         GameObject helpBtnObj = new GameObject("HelpButton");
-        helpBtnObj.transform.SetParent(hudPanelObj.transform);
+        helpBtnObj.transform.SetParent(rightHud.transform);
         RectTransform helpRt = helpBtnObj.AddComponent<RectTransform>();
-        helpRt.anchorMin = new Vector2(1, 0.5f);
-        helpRt.anchorMax = new Vector2(1, 0.5f);
-        helpRt.pivot = new Vector2(1, 0.5f);
-        helpRt.anchoredPosition = new Vector2(-20, 0);
         helpRt.sizeDelta = new Vector2(40, 40);
 
         Image helpImg = helpBtnObj.AddComponent<Image>();
@@ -163,20 +200,25 @@ public class GameUIManager : MonoBehaviour
         Button helpButton = helpBtnObj.AddComponent<Button>();
         Text helpText = CreateText(helpBtnObj, "HelpText", "?", Vector2.zero, Color.white, 20);
         helpText.alignment = TextAnchor.MiddleCenter;
+        RectTransform hTxtRt = helpText.GetComponent<RectTransform>();
+        hTxtRt.anchorMin = Vector2.zero;
+        hTxtRt.anchorMax = Vector2.one;
+        hTxtRt.offsetMin = Vector2.zero;
+        hTxtRt.offsetMax = Vector2.zero;
         helpButton.onClick.AddListener(ShowStartMenu);
 
-        // 3. Karakter Diyalog Paneli (Sol Alt Köşede Yer Alacak)
+        // 3. Karakter Diyalog Paneli (Üst HUD Barının Hemen Altında Tam Genişlikte Yer Alacak)
         speechBubbleObj = new GameObject("SpeechBubblePanel");
         speechBubbleObj.transform.SetParent(canvasObj.transform);
         RectTransform bubbleRt = speechBubbleObj.AddComponent<RectTransform>();
-        bubbleRt.anchorMin = new Vector2(0, 0);
-        bubbleRt.anchorMax = new Vector2(0, 0);
-        bubbleRt.pivot = new Vector2(0, 0);
-        bubbleRt.anchoredPosition = new Vector2(20, 110); // Alet tepsisinin hemen üzerinde sol tarafta
-        bubbleRt.sizeDelta = new Vector2(300, 100);
+        bubbleRt.anchorMin = new Vector2(0, 1);
+        bubbleRt.anchorMax = new Vector2(1, 1);
+        bubbleRt.pivot = new Vector2(0.5f, 1);
+        bubbleRt.anchoredPosition = new Vector2(0, -80); // HUD panelinin (80px) hemen altında
+        bubbleRt.sizeDelta = new Vector2(0, 60);
 
         Image bubbleBg = speechBubbleObj.AddComponent<Image>();
-        bubbleBg.color = new Color(0.1f, 0.1f, 0.12f, 0.9f);
+        bubbleBg.color = new Color(0.12f, 0.12f, 0.15f, 0.9f); // Sleek koyu gri
 
         // Karakter Küçük Avatarı
         GameObject gameAvatarObj = new GameObject("GameAvatar");
@@ -185,8 +227,8 @@ public class GameUIManager : MonoBehaviour
         gaRt.anchorMin = new Vector2(0, 0.5f);
         gaRt.anchorMax = new Vector2(0, 0.5f);
         gaRt.pivot = new Vector2(0, 0.5f);
-        gaRt.anchoredPosition = new Vector2(10, 0);
-        gaRt.sizeDelta = new Vector2(80, 80);
+        gaRt.anchoredPosition = new Vector2(15, 0);
+        gaRt.sizeDelta = new Vector2(46, 46);
         gameAvatarImage = gameAvatarObj.AddComponent<Image>();
 
         // Diyalog Balonu Yazısı
@@ -195,12 +237,12 @@ public class GameUIManager : MonoBehaviour
         RectTransform stRt = speechTextObj.AddComponent<RectTransform>();
         stRt.anchorMin = new Vector2(0, 0);
         stRt.anchorMax = new Vector2(1, 1);
-        stRt.offsetMin = new Vector2(100, 10);
-        stRt.offsetMax = new Vector2(-10, -10);
+        stRt.offsetMin = new Vector2(75, 5);
+        stRt.offsetMax = new Vector2(-15, -5);
         gameSpeechText = speechTextObj.AddComponent<Text>();
         gameSpeechText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        gameSpeechText.fontSize = 12;
-        gameSpeechText.color = Color.white;
+        gameSpeechText.fontSize = 13;
+        gameSpeechText.color = new Color(0.9f, 0.9f, 0.9f, 1f);
         gameSpeechText.alignment = TextAnchor.MiddleLeft;
         gameSpeechText.text = "Çizim rulosunu kullanarak malzemeleri yerleştir.";
 
@@ -510,16 +552,12 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    private GameObject CreateHUDIconGroup(GameObject parent, string name, string iconChainName, Vector2 anchor, float xOffset, out Text valueText, string tooltipText)
+    private GameObject CreateHUDIconGroup(GameObject parent, string name, string iconChainName, out Text valueText, string tooltipText)
     {
         GameObject group = new GameObject(name);
         group.transform.SetParent(parent.transform);
         RectTransform rt = group.AddComponent<RectTransform>();
-        rt.anchorMin = anchor;
-        rt.anchorMax = anchor;
-        rt.pivot = new Vector2(0, 0.5f);
-        rt.anchoredPosition = new Vector2(xOffset, 0);
-        rt.sizeDelta = new Vector2(110, 50);
+        rt.sizeDelta = new Vector2(80, 40);
 
         // Icon
         GameObject iconObj = new GameObject("Icon");
@@ -545,7 +583,7 @@ public class GameUIManager : MonoBehaviour
         textRt.anchorMax = new Vector2(0, 0.5f);
         textRt.pivot = new Vector2(0, 0.5f);
         textRt.anchoredPosition = new Vector2(35, 0);
-        textRt.sizeDelta = new Vector2(75, 30);
+        textRt.sizeDelta = new Vector2(45, 30);
         valueText = textObj.AddComponent<Text>();
         valueText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         valueText.fontSize = 18;

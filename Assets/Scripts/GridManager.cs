@@ -47,14 +47,15 @@ public class GridManager : MonoBehaviour
         SetupDynamicPrefabs();
         GenerateGrid();
         SpawnInitialItems();
+        SpawnScatteredItems();
         SpawnRestorationTargets();
     }
 
     private void GenerateGrid()
     {
-        // Yalnızca 1 satırlık 5 hücrelik Alet Tepsisi (Inventory Slots) oluşturulur (yOffset = -3.5f)
+        // Envanter Tepsisi en alta (yOffset = -4.3f) yerleştirilir
         float startX = -(width - 1) * cellSize / 2f;
-        float startY = -3.5f;
+        float startY = -4.3f;
 
         for (int x = 0; x < width; x++)
         {
@@ -72,12 +73,42 @@ public class GridManager : MonoBehaviour
 
     private void SpawnInitialItems()
     {
-        // Alttaki envanter tepsisinin ortasında (0f, -2.5f, 0f) konumuna Çizim Rulosu yerleştir
-        Vector3 blueprintPos = new Vector3(0f, -2.5f, 0f);
+        // Çizim rulosunu en sağ slota hizalayarak en alta (2.7f, -4.3f, 0f) yerleştir
+        Vector3 blueprintPos = new Vector3(2.7f, -4.3f, 0f);
         GameObject itemObj = Instantiate(itemPrefab, blueprintPos, Quaternion.identity);
         itemObj.SetActive(true);
         MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
         mergeItem.Initialize(toolboxData, null);
+    }
+
+    private void SpawnScatteredItems()
+    {
+        // 5 başlangıç eşyasını bahçenin doğal yerlerine dağıtılmış olarak spawn et
+        Vector3[] scatterPositions = new Vector3[]
+        {
+            new Vector3(-2.3f, 0.2f, 0f),  // Sol bahçe alanı
+            new Vector3(2.3f, 2.1f, 0f),   // Sağ üst bahçe yolu
+            new Vector3(-2.0f, -1.8f, 0f), // Sol alt yeşillik
+            new Vector3(2.4f, -1.2f, 0f),  // Sağ alt patika
+            new Vector3(0.7f, 0.5f, 0f)    // Havuzun sağ kenarı
+        };
+
+        ItemData[] itemsToScatter = new ItemData[]
+        {
+            toolLvl1,      // Restorasyon Fırçası
+            materialLvl1,  // Kireç Harcı Kovası
+            materialLvl2,  // Restorasyon Karosu
+            materialLvl3,  // Mermer Blok
+            faucetData     // Antik Musluk
+        };
+
+        for (int i = 0; i < itemsToScatter.Length; i++)
+        {
+            GameObject itemObj = Instantiate(itemPrefab, scatterPositions[i], Quaternion.identity);
+            itemObj.SetActive(true);
+            MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
+            mergeItem.Initialize(itemsToScatter[i], null);
+        }
     }
 
     public void SpawnItemInRandomCell()
