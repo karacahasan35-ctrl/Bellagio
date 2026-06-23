@@ -45,6 +45,9 @@ public class GameUIManager : MonoBehaviour
 
     private void CreateDynamicUI()
     {
+        // EventSystem oluştur (Tıklamaların algılanması için zorunlu!)
+        CreateEventSystem();
+
         // 1. Canvas oluştur
         GameObject canvasObj = new GameObject("UICanvas");
         canvasObj.transform.SetParent(transform);
@@ -123,6 +126,28 @@ public class GameUIManager : MonoBehaviour
         toggleButtonText = CreateText(toggleObj, "ToggleText", "MERGE ALANINA GİT", Vector2.zero, Color.white, 16);
         toggleButtonText.alignment = TextAnchor.MiddleCenter;
         toggleViewButton.onClick.AddListener(OnToggleViewClicked);
+    }
+
+    private void CreateEventSystem()
+    {
+        if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        {
+            GameObject esObj = new GameObject("EventSystem");
+            esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            
+            // Yeni Input System için UI modülünü eklemeyi dene, yoksa StandaloneInputModule ekle
+            System.Type newUIModule = System.Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+            if (newUIModule != null)
+            {
+                esObj.AddComponent(newUIModule);
+                Debug.Log("[GameUIManager] EventSystem created with InputSystemUIInputModule.");
+            }
+            else
+            {
+                esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                Debug.Log("[GameUIManager] EventSystem created with StandaloneInputModule.");
+            }
+        }
     }
 
     private Text CreateText(GameObject parent, string name, string content, Vector2 pos, Color color, int fontSize)
