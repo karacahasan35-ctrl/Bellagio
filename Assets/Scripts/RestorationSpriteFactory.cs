@@ -28,6 +28,30 @@ public static class RestorationSpriteFactory
             else if (level == 2) DrawTile(pixels, size);     // Karo
             else DrawMarble(pixels, size);                  // Yontulmuş Mermer (Lvl 3+)
         }
+        else if (chainName == "Faucet")
+        {
+            DrawFaucet(pixels, size);
+        }
+        else if (chainName == "FlowerPot")
+        {
+            DrawFlowerPot(pixels, size);
+        }
+        else if (chainName == "Bench")
+        {
+            DrawBench(pixels, size);
+        }
+        else if (chainName == "Lantern")
+        {
+            DrawLantern(pixels, size);
+        }
+        else if (chainName == "AvatarCan")
+        {
+            DrawAvatarCan(pixels, size);
+        }
+        else if (chainName == "AvatarLeyla")
+        {
+            DrawAvatarLeyla(pixels, size);
+        }
         else
         {
             // Fallback (Hata durumunda beyaz yuvarlak)
@@ -282,5 +306,161 @@ public static class RestorationSpriteFactory
                 y0 += sy;
             }
         }
+    }
+
+    private static void DrawFaucet(Color[] pixels, int size)
+    {
+        Color copper = new Color(0.72f, 0.44f, 0.28f, 1f);
+        Color darkCopper = new Color(0.48f, 0.25f, 0.12f, 1f);
+        Color waterBlue = new Color(0.2f, 0.6f, 0.9f, 0.9f);
+
+        // Yatay boru
+        FillRect(pixels, size, 20, 56, 44, 16, copper);
+        FillRect(pixels, size, 20, 52, 44, 4, darkCopper);
+
+        // Dikey gövde
+        FillRect(pixels, size, 56, 36, 16, 40, copper);
+        FillRect(pixels, size, 56, 32, 16, 4, darkCopper);
+
+        // Ağızlık (Spout)
+        FillRect(pixels, size, 72, 36, 24, 16, copper);
+        FillRect(pixels, size, 80, 20, 16, 16, copper);
+        FillRect(pixels, size, 80, 16, 16, 4, darkCopper);
+
+        // Vana Kolu
+        FillRect(pixels, size, 44, 80, 40, 8, darkCopper);
+        FillRect(pixels, size, 60, 72, 8, 8, darkCopper);
+
+        // Damla
+        FillRect(pixels, size, 86, 4, 4, 8, waterBlue);
+    }
+
+    private static void DrawFlowerPot(Color[] pixels, int size)
+    {
+        Color terracotta = new Color(0.82f, 0.42f, 0.24f, 1f);
+        Color darkPot = new Color(0.6f, 0.28f, 0.14f, 1f);
+        Color green = new Color(0.2f, 0.72f, 0.35f, 1f);
+        Color red = new Color(0.92f, 0.25f, 0.3f, 1f);
+
+        // Saksı Gövdesi
+        FillRect(pixels, size, 36, 20, 56, 8, terracotta);
+        FillRect(pixels, size, 40, 28, 48, 8, terracotta);
+        FillRect(pixels, size, 44, 36, 40, 8, terracotta);
+        
+        // Saksı Ağzı
+        FillRect(pixels, size, 32, 44, 64, 8, darkPot);
+
+        // Bitki Sapı
+        FillRect(pixels, size, 60, 52, 8, 36, green);
+        
+        // Yapraklar
+        FillRect(pixels, size, 48, 60, 12, 12, green);
+        FillRect(pixels, size, 68, 68, 12, 12, green);
+
+        // Çiçek
+        FillRect(pixels, size, 56, 88, 16, 16, red);
+        FillRect(pixels, size, 60, 104, 8, 8, new Color(0.95f, 0.85f, 0.15f, 1f));
+    }
+
+    private static void DrawBench(Color[] pixels, int size)
+    {
+        Color wood = new Color(0.62f, 0.38f, 0.2f, 1f);
+        Color iron = new Color(0.22f, 0.22f, 0.24f, 1f);
+
+        // Sol ayak
+        FillRect(pixels, size, 28, 20, 8, 36, iron);
+        // Sağ ayak
+        FillRect(pixels, size, 92, 20, 8, 36, iron);
+
+        // Oturak
+        FillRect(pixels, size, 20, 56, 88, 8, wood);
+
+        // Sırt destek demirleri
+        FillRect(pixels, size, 28, 64, 8, 32, iron);
+        FillRect(pixels, size, 92, 64, 8, 32, iron);
+
+        // Sırtlık
+        FillRect(pixels, size, 20, 80, 88, 12, wood);
+        FillRect(pixels, size, 20, 96, 88, 8, wood);
+    }
+
+    private static void DrawLantern(Color[] pixels, int size)
+    {
+        Color iron = new Color(0.2f, 0.2f, 0.22f, 1f);
+        Color glass = new Color(0.9f, 0.9f, 0.7f, 0.4f);
+        Color glow = new Color(1f, 0.8f, 0.15f, 1f);
+
+        // Alt taban
+        FillRect(pixels, size, 44, 20, 40, 8, iron);
+        // Cam gövde
+        FillRect(pixels, size, 48, 28, 32, 52, glass);
+        // Işık
+        FillRect(pixels, size, 56, 40, 16, 24, glow);
+
+        // Direkler
+        FillRect(pixels, size, 44, 28, 4, 52, iron);
+        FillRect(pixels, size, 80, 28, 4, 52, iron);
+        FillRect(pixels, size, 62, 28, 4, 52, iron);
+
+        // Üst şapka
+        FillRect(pixels, size, 40, 80, 48, 12, iron);
+        FillRect(pixels, size, 58, 92, 12, 8, iron);
+    }
+
+    private static void DrawAvatarCan(Color[] pixels, int size)
+    {
+        Color skin = new Color(0.98f, 0.82f, 0.68f, 1f);
+        Color hair = new Color(0.42f, 0.23f, 0.1f, 1f);
+        Color hat = new Color(0.95f, 0.8f, 0.15f, 1f);
+        Color jacket = new Color(0.18f, 0.38f, 0.72f, 1f);
+
+        // Beden (Mavi Ceket)
+        FillRect(pixels, size, 36, 20, 56, 28, jacket);
+        FillRect(pixels, size, 54, 44, 20, 4, Color.white); // Yaka
+
+        // Yüz
+        FillRect(pixels, size, 48, 48, 32, 32, skin);
+
+        // Gözler
+        FillRect(pixels, size, 54, 64, 4, 4, Color.black);
+        FillRect(pixels, size, 70, 64, 4, 4, Color.black);
+
+        // Ağız
+        FillRect(pixels, size, 58, 54, 12, 4, new Color(0.85f, 0.35f, 0.35f, 1f));
+
+        // Saç
+        FillRect(pixels, size, 44, 76, 40, 8, hair);
+
+        // Baret
+        FillRect(pixels, size, 32, 80, 64, 4, hat);
+        FillRect(pixels, size, 40, 84, 48, 16, hat);
+    }
+
+    private static void DrawAvatarLeyla(Color[] pixels, int size)
+    {
+        Color skin = new Color(0.98f, 0.8f, 0.65f, 1f);
+        Color hair = new Color(0.15f, 0.15f, 0.18f, 1f);
+        Color jacket = new Color(0.82f, 0.22f, 0.28f, 1f);
+
+        // Saç arka planı
+        FillRect(pixels, size, 40, 44, 48, 32, hair);
+
+        // Beden (Kırmızı Ceket)
+        FillRect(pixels, size, 36, 20, 56, 28, jacket);
+        FillRect(pixels, size, 54, 44, 20, 4, Color.white); // Yaka
+
+        // Yüz
+        FillRect(pixels, size, 48, 48, 32, 32, skin);
+
+        // Gözlükler
+        FillRect(pixels, size, 46, 62, 14, 8, Color.black);
+        FillRect(pixels, size, 68, 62, 14, 8, Color.black);
+        FillRect(pixels, size, 60, 64, 8, 4, Color.black);
+
+        // Ağız
+        FillRect(pixels, size, 58, 54, 12, 4, new Color(0.9f, 0.45f, 0.45f, 1f));
+
+        // Saç üst/perçem
+        FillRect(pixels, size, 44, 76, 40, 8, hair);
     }
 }

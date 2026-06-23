@@ -110,6 +110,9 @@ public class RestorationTarget : MonoBehaviour
                 bool success = TaskManager.Instance.TryCompleteTask(task, item);
                 if (success)
                 {
+                    // Karakter diyalog geribildirimi tetikle
+                    TriggerDialogueFeedback(taskId);
+
                     // Particle Efekti & Yok Etme Animasyonu
                     SpawnCompletionParticles();
                     Destroy(gameObject, 0.5f);
@@ -121,6 +124,33 @@ public class RestorationTarget : MonoBehaviour
         // Hatalı eşyada sallanma efekti (geribildirim)
         StartCoroutine(ShakeEffect());
         return false;
+    }
+
+    private void TriggerDialogueFeedback(string taskId)
+    {
+        if (GameUIManager.Instance == null) return;
+
+        string charName = GameUIManager.selectedCharacter;
+        string feedback = "";
+
+        if (charName == "Can")
+        {
+            if (taskId == "t1") feedback = "Harika! Zemin kalıntılarını süpürüp temizledik.";
+            else if (taskId == "t2") feedback = "Çatlakları kireç harcıyla doldurdum, taş gibi oldu!";
+            else if (taskId == "t3") feedback = "Zemine karolar döşendi, çok estetik duruyor.";
+            else if (taskId == "t4") feedback = "Sütunlar mermer bloklarla sapasağlam oldu.";
+            else if (taskId == "t5") feedback = "Musluk takıldı! Antik havuzumuzda su akıyor artık!";
+        }
+        else // Leyla
+        {
+            if (taskId == "t1") feedback = "Toz ve molozlar temizlendi, yüzey hassas onarıma hazır.";
+            else if (taskId == "t2") feedback = "Doğal harç çatlakları kapattı, yapısal bütünlük korundu.";
+            else if (taskId == "t3") feedback = "Restorasyon karosu tarihi dokuyu mükemmel yansıtıyor.";
+            else if (taskId == "t4") feedback = "Hasarlı sütun başlığı yontulmuş mermerle yenilendi.";
+            else if (taskId == "t5") feedback = "Su tesisatı yenilendi, antik çeşme çalışıyor.";
+        }
+
+        GameUIManager.Instance.SetSpeechText(feedback);
     }
 
     private System.Collections.IEnumerator ShakeEffect()

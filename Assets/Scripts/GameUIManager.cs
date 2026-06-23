@@ -5,11 +5,27 @@ public class GameUIManager : MonoBehaviour
 {
     public static GameUIManager Instance { get; private set; }
 
+    public static string selectedCharacter = ""; // "Can" or "Leyla"
+    
     private Canvas canvas;
     private Text goldText;
     private Text starText;
     private Text progressText;
+    
+    // Start Menu / Character Select UI
     private GameObject startMenuPanel;
+    private Image avatarPreviewImage;
+    private Text transcriptText;
+    private Button startRestorationButton;
+    private Image leylaCardBg;
+    private Image canCardBg;
+
+    // HUD / Gameplay UI
+    private GameObject marketPanel;
+    private Image gameAvatarImage;
+    private Text gameSpeechText;
+    private GameObject speechBubbleObj;
+    private Text marketStatusText;
 
     private void Awake()
     {
@@ -27,7 +43,6 @@ public class GameUIManager : MonoBehaviour
 
         UpdateHUD();
         
-        // Grid ve hedefleri varsayılan olarak görünür kıl
         if (GridManager.Instance != null)
         {
             GridManager.Instance.SetGridVisibility(true);
@@ -44,7 +59,6 @@ public class GameUIManager : MonoBehaviour
 
     private void CreateDynamicUI()
     {
-        // EventSystem oluştur (Tıklamaların algılanması için)
         CreateEventSystem();
 
         // 1. Canvas oluştur
@@ -66,14 +80,32 @@ public class GameUIManager : MonoBehaviour
         hudRt.sizeDelta = new Vector2(0, 80);
         
         Image hudBg = hudPanelObj.AddComponent<Image>();
-        hudBg.color = new Color(0.08f, 0.08f, 0.1f, 0.9f); // Premium koyu metalik renk
+        hudBg.color = new Color(0.08f, 0.08f, 0.1f, 0.95f); // Premium metalik koyu renk
 
         // HUD Yazıları (Altın, Yıldız, İlerleme)
         goldText = CreateText(hudPanelObj, "GoldText", "ALTIN: 500", new Vector2(-160, 0), Color.yellow, 20);
         starText = CreateText(hudPanelObj, "StarText", "YILDIZ: 0", new Vector2(0, 0), new Color(0.2f, 0.8f, 1f), 20);
         progressText = CreateText(hudPanelObj, "ProgressText", "İLERLEME: %0", new Vector2(160, 0), Color.green, 20);
 
-        // Soru İşareti Yardım Butonu (HUD'un sağ köşesine eklenir)
+        // MARKET Butonu
+        GameObject marketBtnObj = new GameObject("MarketButton");
+        marketBtnObj.transform.SetParent(hudPanelObj.transform);
+        RectTransform marketRt = marketBtnObj.AddComponent<RectTransform>();
+        marketRt.anchorMin = new Vector2(1, 0.5f);
+        marketRt.anchorMax = new Vector2(1, 0.5f);
+        marketRt.pivot = new Vector2(1, 0.5f);
+        marketRt.anchoredPosition = new Vector2(-70, 0);
+        marketRt.sizeDelta = new Vector2(90, 40);
+
+        Image marketImg = marketBtnObj.AddComponent<Image>();
+        marketImg.color = new Color(0.15f, 0.6f, 0.3f, 1f); // Yeşil buton
+        
+        Button marketButton = marketBtnObj.AddComponent<Button>();
+        Text marketBtnText = CreateText(marketBtnObj, "MarketBtnText", "MARKET", Vector2.zero, Color.white, 14);
+        marketBtnText.alignment = TextAnchor.MiddleCenter;
+        marketButton.onClick.AddListener(ShowMarketPanel);
+
+        // YARDIM Butonu (?)
         GameObject helpBtnObj = new GameObject("HelpButton");
         helpBtnObj.transform.SetParent(hudPanelObj.transform);
         RectTransform helpRt = helpBtnObj.AddComponent<RectTransform>();
@@ -84,15 +116,174 @@ public class GameUIManager : MonoBehaviour
         helpRt.sizeDelta = new Vector2(40, 40);
 
         Image helpImg = helpBtnObj.AddComponent<Image>();
-        helpImg.color = new Color(0.2f, 0.2f, 0.25f, 1f); // Koyu gri yuvarlak buton arka planı
+        helpImg.color = new Color(0.2f, 0.2f, 0.25f, 1f);
         
         Button helpButton = helpBtnObj.AddComponent<Button>();
         Text helpText = CreateText(helpBtnObj, "HelpText", "?", Vector2.zero, Color.white, 20);
         helpText.alignment = TextAnchor.MiddleCenter;
-        
         helpButton.onClick.AddListener(ShowStartMenu);
 
-        // 3. Giriş ve Tutorial Ekranı (Start Menu Overlay)
+        // 3. Karakter Diyalog Paneli (Sol Alt Köşede Yer Alacak)
+        speechBubbleObj = new GameObject("SpeechBubblePanel");
+        speechBubbleObj.transform.SetParent(canvasObj.transform);
+        RectTransform bubbleRt = speechBubbleObj.AddComponent<RectTransform>();
+        bubbleRt.anchorMin = new Vector2(0, 0);
+        bubbleRt.anchorMax = new Vector2(0, 0);
+        bubbleRt.pivot = new Vector2(0, 0);
+        bubbleRt.anchoredPosition = new Vector2(20, 110); // Alet tepsisinin hemen üzerinde sol tarafta
+        bubbleRt.sizeDelta = new Vector2(300, 100);
+
+        Image bubbleBg = speechBubbleObj.AddComponent<Image>();
+        bubbleBg.color = new Color(0.1f, 0.1f, 0.12f, 0.9f);
+
+        // Karakter Küçük Avatarı
+        GameObject gameAvatarObj = new GameObject("GameAvatar");
+        gameAvatarObj.transform.SetParent(speechBubbleObj.transform);
+        RectTransform gaRt = gameAvatarObj.AddComponent<RectTransform>();
+        gaRt.anchorMin = new Vector2(0, 0.5f);
+        gaRt.anchorMax = new Vector2(0, 0.5f);
+        gaRt.pivot = new Vector2(0, 0.5f);
+        gaRt.anchoredPosition = new Vector2(10, 0);
+        gaRt.sizeDelta = new Vector2(80, 80);
+        gameAvatarImage = gameAvatarObj.AddComponent<Image>();
+
+        // Diyalog Balonu Yazısı
+        GameObject speechTextObj = new GameObject("SpeechText");
+        speechTextObj.transform.SetParent(speechBubbleObj.transform);
+        RectTransform stRt = speechTextObj.AddComponent<RectTransform>();
+        stRt.anchorMin = new Vector2(0, 0);
+        stRt.anchorMax = new Vector2(1, 1);
+        stRt.offsetMin = new Vector2(100, 10);
+        stRt.offsetMax = new Vector2(-10, -10);
+        gameSpeechText = speechTextObj.AddComponent<Text>();
+        gameSpeechText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        gameSpeechText.fontSize = 12;
+        gameSpeechText.color = Color.white;
+        gameSpeechText.alignment = TextAnchor.MiddleLeft;
+        gameSpeechText.text = "Aletleri hedeflere sürükle!";
+
+        // Başlangıçta karakter seçilmediği için bu paneli gizliyoruz
+        speechBubbleObj.SetActive(false);
+
+        // 4. MARKET PANELİ (Popup)
+        CreateMarketPanel(canvasObj);
+
+        // 5. GİRİŞ VE KARAKTER SEÇİM EKRANI OVERLAY
+        CreateStartMenuPanel(canvasObj);
+    }
+
+    private void CreateMarketPanel(GameObject canvasObj)
+    {
+        marketPanel = new GameObject("MarketPanel");
+        marketPanel.transform.SetParent(canvasObj.transform);
+        RectTransform marketRt = marketPanel.AddComponent<RectTransform>();
+        marketRt.anchorMin = new Vector2(0.5f, 0.5f);
+        marketRt.anchorMax = new Vector2(0.5f, 0.5f);
+        marketRt.pivot = new Vector2(0.5f, 0.5f);
+        marketRt.anchoredPosition = Vector2.zero;
+        marketRt.sizeDelta = new Vector2(460, 360);
+
+        Image bg = marketPanel.AddComponent<Image>();
+        bg.color = new Color(0.1f, 0.1f, 0.14f, 0.98f); // Koyu arka plan
+
+        CreateText(marketPanel, "MarketTitle", "DEKORASYON DÜKKANI", new Vector2(0, 140), new Color(0.9f, 0.75f, 0.15f, 1f), 22);
+
+        marketStatusText = CreateText(marketPanel, "MarketStatusText", "Avluya eklemek için dekor satın alabilirsiniz.", new Vector2(0, 105), Color.gray, 14);
+
+        // Dekor 1: Saksı
+        CreateMarketItem(marketPanel, "Saksı", "FlowerPot", "100 Altın", new Vector2(0, 40), () => TryBuyDecoration("FlowerPot", 100, 0));
+        // Dekor 2: Bank
+        CreateMarketItem(marketPanel, "Bahçe Bankı", "Bench", "200 Altın", new Vector2(0, -20), () => TryBuyDecoration("Bench", 200, 0));
+        // Dekor 3: Fener
+        CreateMarketItem(marketPanel, "Tarihi Fener", "Lantern", "150 Altın + 10 Yıldız", new Vector2(0, -80), () => TryBuyDecoration("Lantern", 150, 10));
+
+        // Kapat Butonu
+        GameObject closeBtn = new GameObject("CloseButton");
+        closeBtn.transform.SetParent(marketPanel.transform);
+        RectTransform closeRt = closeBtn.AddComponent<RectTransform>();
+        closeRt.anchoredPosition = new Vector2(0, -140);
+        closeRt.sizeDelta = new Vector2(180, 40);
+        Image closeImg = closeBtn.AddComponent<Image>();
+        closeImg.color = new Color(0.7f, 0.2f, 0.2f, 1f); // Kırmızı
+        Button closeButton = closeBtn.AddComponent<Button>();
+        Text closeText = CreateText(closeBtn, "CloseText", "KAPAT", Vector2.zero, Color.white, 14);
+        closeText.alignment = TextAnchor.MiddleCenter;
+        closeButton.onClick.AddListener(HideMarketPanel);
+
+        marketPanel.SetActive(false);
+    }
+
+    private void CreateMarketItem(GameObject parent, string label, string spriteChain, string costText, Vector2 pos, System.Action onBuy)
+    {
+        GameObject itemRow = new GameObject($"MarketItem_{label}");
+        itemRow.transform.SetParent(parent.transform);
+        RectTransform rt = itemRow.AddComponent<RectTransform>();
+        rt.anchoredPosition = pos;
+        rt.sizeDelta = new Vector2(400, 50);
+
+        // İkon
+        GameObject iconObj = new GameObject("Icon");
+        iconObj.transform.SetParent(itemRow.transform);
+        RectTransform iconRt = iconObj.AddComponent<RectTransform>();
+        iconRt.anchorMin = new Vector2(0, 0.5f);
+        iconRt.anchorMax = new Vector2(0, 0.5f);
+        iconRt.pivot = new Vector2(0, 0.5f);
+        iconRt.anchoredPosition = new Vector2(10, 0);
+        iconRt.sizeDelta = new Vector2(40, 40);
+        Image iconImg = iconObj.AddComponent<Image>();
+        iconImg.sprite = RestorationSpriteFactory.GetSprite(spriteChain, 1, false);
+
+        // İsim ve Fiyat
+        Text info = CreateText(itemRow, "InfoText", $"{label} ({costText})", new Vector2(40, 0), Color.white, 14);
+        info.alignment = TextAnchor.MiddleLeft;
+
+        // Satın Al Butonu
+        GameObject buyBtn = new GameObject("BuyButton");
+        buyBtn.transform.SetParent(itemRow.transform);
+        RectTransform buyRt = buyBtn.AddComponent<RectTransform>();
+        buyRt.anchorMin = new Vector2(1, 0.5f);
+        buyRt.anchorMax = new Vector2(1, 0.5f);
+        buyRt.pivot = new Vector2(1, 0.5f);
+        buyRt.anchoredPosition = new Vector2(-10, 0);
+        buyRt.sizeDelta = new Vector2(100, 34);
+        Image buyImg = buyBtn.AddComponent<Image>();
+        buyImg.color = new Color(0.2f, 0.5f, 0.8f, 1f); // Mavi
+        Button button = buyBtn.AddComponent<Button>();
+        Text btnTxt = CreateText(buyBtn, "BtnTxt", "SATIN AL", Vector2.zero, Color.white, 12);
+        btnTxt.alignment = TextAnchor.MiddleCenter;
+        button.onClick.AddListener(() => onBuy?.Invoke());
+    }
+
+    private void TryBuyDecoration(string type, int goldCost, int starCost)
+    {
+        if (TaskManager.Instance == null || RenovationManager.Instance == null) return;
+
+        if (TaskManager.Instance.currentGold >= goldCost && TaskManager.Instance.currentStars >= starCost)
+        {
+            // Satın alımı gerçekleştir
+            TaskManager.Instance.currentGold -= goldCost;
+            TaskManager.Instance.currentStars -= starCost;
+
+            RenovationManager.Instance.BuyDecoration(type);
+            marketStatusText.text = $"Muhteşem! {type} başarıyla avluya yerleştirildi.";
+            marketStatusText.color = Color.green;
+
+            UpdateHUD();
+            
+            // Karakter diyaloğunu güncelle
+            SetSpeechText(selectedCharacter == "Can" 
+                ? "Harika bir seçim! Avlu gittikçe zenginleşiyor." 
+                : "Harika! Yeni dekorasyon villanın estetiğine çok uydu.");
+        }
+        else
+        {
+            marketStatusText.text = "Hata: Yetersiz Altın veya Yıldız!";
+            marketStatusText.color = Color.red;
+        }
+    }
+
+    private void CreateStartMenuPanel(GameObject canvasObj)
+    {
         startMenuPanel = new GameObject("StartMenuPanel");
         startMenuPanel.transform.SetParent(canvasObj.transform);
         RectTransform menuRt = startMenuPanel.AddComponent<RectTransform>();
@@ -102,77 +293,113 @@ public class GameUIManager : MonoBehaviour
         menuRt.offsetMax = Vector2.zero;
 
         Image menuBg = startMenuPanel.AddComponent<Image>();
-        menuBg.color = new Color(0.06f, 0.06f, 0.08f, 0.98f); // Koyu premium arka plan
+        menuBg.color = new Color(0.06f, 0.06f, 0.08f, 0.99f); // Tam kapalı premium arka plan
 
-        // Logo / Başlık
-        CreateText(startMenuPanel, "GameTitle", "BELLAGIO", new Vector2(0, 240), new Color(0.9f, 0.75f, 0.15f, 1f), 36);
-        CreateText(startMenuPanel, "GameSubtitle", "Teknik Restorasyon Simülatörü", new Vector2(0, 195), new Color(0.7f, 0.7f, 0.7f, 1f), 16);
+        // Logo
+        CreateText(startMenuPanel, "GameTitle", "BELLAGIO", new Vector2(0, 240), new Color(0.9f, 0.75f, 0.15f, 1f), 38);
+        CreateText(startMenuPanel, "GameSubtitle", "MİMARİ RESTORASYON SIMÜLATÖRÜ", new Vector2(0, 195), Color.gray, 13);
 
-        // Kutu Arka Planı (Tutorial Box)
-        GameObject boxObj = new GameObject("TutorialBox");
-        boxObj.transform.SetParent(startMenuPanel.transform);
-        RectTransform boxRt = boxObj.AddComponent<RectTransform>();
-        boxRt.anchoredPosition = new Vector2(0, 10);
-        boxRt.sizeDelta = new Vector2(420, 260);
-        Image boxImg = boxObj.AddComponent<Image>();
-        boxImg.color = new Color(0.12f, 0.12f, 0.16f, 0.9f);
+        // Mimar Seçim Başlığı
+        CreateText(startMenuPanel, "SelectTitle", "Restorasyon Mimarını Seçiniz:", new Vector2(0, 140), Color.white, 16);
 
-        // Kutu Kenarlığı
-        GameObject borderObj = new GameObject("Border");
-        borderObj.transform.SetParent(boxObj.transform);
-        RectTransform borderRt = borderObj.AddComponent<RectTransform>();
-        borderRt.anchorMin = Vector2.zero;
-        borderRt.anchorMax = Vector2.one;
-        borderRt.offsetMin = new Vector2(2, 2);
-        borderRt.offsetMax = new Vector2(-2, -2);
-        Image borderImg = borderObj.AddComponent<Image>();
-        borderImg.color = new Color(0.2f, 0.2f, 0.25f, 1f);
+        // LEYLA SEÇİM KARTI
+        GameObject leylaCard = new GameObject("LeylaCard");
+        leylaCard.transform.SetParent(startMenuPanel.transform);
+        RectTransform lcRt = leylaCard.AddComponent<RectTransform>();
+        lcRt.anchoredPosition = new Vector2(-110, 40);
+        lcRt.sizeDelta = new Vector2(170, 130);
+        leylaCardBg = leylaCard.AddComponent<Image>();
+        leylaCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Seçilmemiş kart rengi
+        Button leylaBtn = leylaCard.AddComponent<Button>();
+        leylaBtn.onClick.AddListener(() => OnSelectCharacter("Leyla"));
 
-        // İç Dolgu
-        GameObject contentBgObj = new GameObject("ContentBg");
-        contentBgObj.transform.SetParent(borderObj.transform);
-        RectTransform contentBgRt = contentBgObj.AddComponent<RectTransform>();
-        contentBgRt.anchorMin = Vector2.zero;
-        contentBgRt.anchorMax = Vector2.one;
-        contentBgRt.offsetMin = new Vector2(2, 2);
-        contentBgRt.offsetMax = new Vector2(-2, -2);
-        Image contentBgImg = contentBgObj.AddComponent<Image>();
-        contentBgImg.color = new Color(0.12f, 0.12f, 0.16f, 1f);
+        GameObject leylaAvatar = new GameObject("Avatar");
+        leylaAvatar.transform.SetParent(leylaCard.transform);
+        RectTransform laRt = leylaAvatar.AddComponent<RectTransform>();
+        laRt.anchoredPosition = new Vector2(0, 20);
+        laRt.sizeDelta = new Vector2(60, 60);
+        Image laImg = leylaAvatar.AddComponent<Image>();
+        laImg.sprite = RestorationSpriteFactory.GetSprite("AvatarLeyla", 1, false);
+        CreateText(leylaCard, "Name", "Mimar Leyla", new Vector2(0, -25), Color.white, 14);
+        CreateText(leylaCard, "Role", "(Hassasiyet)", new Vector2(0, -45), Color.gray, 11);
 
-        // Nasıl Oynanır Başlığı
-        CreateText(contentBgObj, "TutHeader", "NASIL OYNANIR?", new Vector2(0, 100), new Color(0.9f, 0.75f, 0.15f, 1f), 18);
+        // CAN SEÇİM KARTI
+        GameObject canCard = new GameObject("CanCard");
+        canCard.transform.SetParent(startMenuPanel.transform);
+        RectTransform ccRt = canCard.AddComponent<RectTransform>();
+        ccRt.anchoredPosition = new Vector2(110, 40);
+        ccRt.sizeDelta = new Vector2(170, 130);
+        canCardBg = canCard.AddComponent<Image>();
+        canCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f);
+        Button canBtn = canCard.AddComponent<Button>();
+        canBtn.onClick.AddListener(() => OnSelectCharacter("Can"));
 
-        // Adımlar
-        Text step1Text = CreateText(contentBgObj, "Step1", "👜 1. Alet Çantasına tıklayarak Fırça ve Kireç Harcı üretin.", new Vector2(0, 50), Color.white, 14);
-        step1Text.alignment = TextAnchor.MiddleLeft;
-        RectTransform s1Rt = step1Text.GetComponent<RectTransform>();
-        s1Rt.sizeDelta = new Vector2(360, 40);
+        GameObject canAvatar = new GameObject("Avatar");
+        canAvatar.transform.SetParent(canCard.transform);
+        RectTransform caRt = canAvatar.AddComponent<RectTransform>();
+        caRt.anchoredPosition = new Vector2(0, 20);
+        caRt.sizeDelta = new Vector2(60, 60);
+        Image caImg = canAvatar.AddComponent<Image>();
+        caImg.sprite = RestorationSpriteFactory.GetSprite("AvatarCan", 1, false);
+        CreateText(canCard, "Name", "Mimar Can", new Vector2(0, -25), Color.white, 14);
+        CreateText(canCard, "Role", "(Tutku)", new Vector2(0, -45), Color.gray, 11);
 
-        Text step2Text = CreateText(contentBgObj, "Step2", "🔄 Aynı seviyedeki alet/malzemeleri birleştirip geliştirin.", new Vector2(0, 0), Color.white, 14);
-        step2Text.alignment = TextAnchor.MiddleLeft;
-        RectTransform s2Rt = step2Text.GetComponent<RectTransform>();
-        s2Rt.sizeDelta = new Vector2(360, 40);
+        // TRANSCRIPT DIYALOG ALANI
+        GameObject speechObj = new GameObject("WelcomeSpeechBox");
+        speechObj.transform.SetParent(startMenuPanel.transform);
+        RectTransform spRt = speechObj.AddComponent<RectTransform>();
+        spRt.anchoredPosition = new Vector2(0, -75);
+        spRt.sizeDelta = new Vector2(400, 80);
+        Image spImg = speechObj.AddComponent<Image>();
+        spImg.color = new Color(0.1f, 0.1f, 0.12f, 1f);
 
-        Text step3Text = CreateText(contentBgObj, "Step3", "📍 Malzemeyi üstteki Restorasyon Çemberlerine bırakarak villayı onarın!", new Vector2(0, -50), Color.white, 14);
-        step3Text.alignment = TextAnchor.MiddleLeft;
-        RectTransform s3Rt = step3Text.GetComponent<RectTransform>();
-        s3Rt.sizeDelta = new Vector2(360, 40);
+        transcriptText = CreateText(speechObj, "Transcript", "Restorasyonu yönetecek mimarınızı seçin...", Vector2.zero, new Color(0.9f, 0.9f, 0.9f, 1f), 12);
+        transcriptText.alignment = TextAnchor.MiddleCenter;
+        RectTransform tRt = transcriptText.GetComponent<RectTransform>();
+        tRt.sizeDelta = new Vector2(380, 70);
 
-        // Başla Butonu
-        GameObject playBtnObj = new GameObject("PlayButton");
+        // BAŞLA BUTONU (Karakter seçilene kadar aktif değildir)
+        GameObject playBtnObj = new GameObject("StartPlayButton");
         playBtnObj.transform.SetParent(startMenuPanel.transform);
         RectTransform playRt = playBtnObj.AddComponent<RectTransform>();
-        playRt.anchoredPosition = new Vector2(0, -180);
+        playRt.anchoredPosition = new Vector2(0, -165);
         playRt.sizeDelta = new Vector2(280, 55);
 
         Image playImg = playBtnObj.AddComponent<Image>();
-        playImg.color = new Color(0.15f, 0.6f, 0.3f, 1f); // Yeşil buton
+        playImg.color = new Color(0.2f, 0.25f, 0.3f, 1f); // Pasif gri buton
 
-        Button playButton = playBtnObj.AddComponent<Button>();
+        startRestorationButton = playBtnObj.AddComponent<Button>();
         Text playText = CreateText(playBtnObj, "PlayText", "RESTORASYONA BAŞLA", Vector2.zero, Color.white, 16);
         playText.alignment = TextAnchor.MiddleCenter;
+        startRestorationButton.interactable = false;
         
-        playButton.onClick.AddListener(HideStartMenu);
+        startRestorationButton.onClick.AddListener(HideStartMenu);
+    }
+
+    private void OnSelectCharacter(string character)
+    {
+        selectedCharacter = character;
+        startRestorationButton.interactable = true;
+        startRestorationButton.GetComponent<Image>().color = new Color(0.15f, 0.6f, 0.3f, 1f); // Aktif yeşil buton
+
+        if (character == "Leyla")
+        {
+            leylaCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
+            canCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla can
+            transcriptText.text = "Leyla: \"Teknik restorasyona hoş geldiniz. Hassas mühendislik kuralları ve doğru malzemelerle bu avluyu şahesere dönüştüreceğiz. Hazırsanız başlayalım!\"";
+        }
+        else
+        {
+            canCardBg.color = new Color(0.15f, 0.6f, 0.3f, 0.8f); // Seçildi yeşil
+            leylaCardBg.color = new Color(0.15f, 0.15f, 0.2f, 1f); // Sıfırla leyla
+            transcriptText.text = "Can: \"Hey merhaba! Ben Can. Antik yapıları canlandırmak benim hayatım. Eşyaları avludaki yerlerine taşıyıp bu harika villayı birlikte kurtaralım!\"";
+        }
+
+        // Oyun içi avatarları ve konuşmaları ayarla
+        gameAvatarImage.sprite = RestorationSpriteFactory.GetSprite($"Avatar{character}", 1, false);
+        gameSpeechText.text = character == "Can" 
+            ? "Çantaya tıklayarak alet üret ve hedeflere sürükle!" 
+            : "Alet çantasını kullanarak malzemeleri yerleştir.";
     }
 
     private void CreateEventSystem()
@@ -236,6 +463,33 @@ public class GameUIManager : MonoBehaviour
         if (startMenuPanel != null)
         {
             startMenuPanel.SetActive(false);
+            speechBubbleObj.SetActive(true); // Giriş yapınca diyalog kutusu açılsın
+        }
+    }
+
+    public void ShowMarketPanel()
+    {
+        if (marketPanel != null)
+        {
+            marketStatusText.text = "Avluya eklemek için dekor satın alabilirsiniz.";
+            marketStatusText.color = Color.gray;
+            marketPanel.SetActive(true);
+        }
+    }
+
+    public void HideMarketPanel()
+    {
+        if (marketPanel != null)
+        {
+            marketPanel.SetActive(false);
+        }
+    }
+
+    public void SetSpeechText(string text)
+    {
+        if (gameSpeechText != null)
+        {
+            gameSpeechText.text = text;
         }
     }
 }

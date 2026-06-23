@@ -7,7 +7,7 @@ public class GridManager : MonoBehaviour
 
     [Header("Grid Dimensions")]
     public int width = 5;
-    public int height = 4;
+    public int height = 1;
     public float cellSize = 0.9f;
 
     [Header("Prefabs")]
@@ -28,6 +28,7 @@ public class GridManager : MonoBehaviour
     private ItemData materialLvl1;
     private ItemData materialLvl2;
     private ItemData materialLvl3;
+    private ItemData faucetData;
 
     private void Awake()
     {
@@ -51,43 +52,32 @@ public class GridManager : MonoBehaviour
 
     private void GenerateGrid()
     {
-        // Grid'i ekranın alt yarısına hizalamak için başlangıç noktasını hesapla (yOffset = -2.2f)
+        // Yalnızca 1 satırlık 5 hücrelik Alet Tepsisi (Inventory Slots) oluşturulur (yOffset = -3.5f)
         float startX = -(width - 1) * cellSize / 2f;
-        float startY = -(height - 1) * cellSize / 2f - 2.2f;
+        float startY = -3.5f;
 
         for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3 spawnPos = new Vector3(startX + x * cellSize, startY + y * cellSize, 0);
-                GameObject cellObj = Instantiate(cellPrefab, spawnPos, Quaternion.identity, transform);
-                cellObj.SetActive(true);
-                cellObj.name = $"Cell_{x}_{y}";
+            Vector3 spawnPos = new Vector3(startX + x * cellSize, startY, 0);
+            GameObject cellObj = Instantiate(cellPrefab, spawnPos, Quaternion.identity, transform);
+            cellObj.SetActive(true);
+            cellObj.name = $"Slot_{x}";
 
-                GridCell cell = cellObj.GetComponent<GridCell>();
-                cell.gridX = x;
-                cell.gridY = y;
-                allCells.Add(cell);
-            }
+            GridCell cell = cellObj.GetComponent<GridCell>();
+            cell.gridX = x;
+            cell.gridY = 0;
+            allCells.Add(cell);
         }
     }
 
     private void SpawnInitialItems()
     {
-        // Başlangıçta sadece grid'in tam ortasına 1 adet "Restorasyon Alet Çantası" yerleştir
-        GridCell centerCell = GetCell(width / 2, height / 2);
-        if (centerCell == null && allCells.Count > 0)
-        {
-            centerCell = allCells[allCells.Count / 2];
-        }
-
-        if (centerCell != null)
-        {
-            GameObject itemObj = Instantiate(itemPrefab, centerCell.transform.position, Quaternion.identity);
-            itemObj.SetActive(true);
-            MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
-            mergeItem.Initialize(toolboxData, centerCell);
-        }
+        // Sol tarafa 1 adet "Restorasyon Alet Çantası" yerleştir (Yuvadan bağımsız)
+        Vector3 toolboxPos = new Vector3(-3.0f, -3.5f, 0f);
+        GameObject itemObj = Instantiate(itemPrefab, toolboxPos, Quaternion.identity);
+        itemObj.SetActive(true);
+        MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
+        mergeItem.Initialize(toolboxData, null);
     }
 
     public void SpawnItemInRandomCell()
@@ -343,42 +333,49 @@ public class GridManager : MonoBehaviour
         materialLvl2.nextLevelItem = materialLvl3;
         materialLvl3.nextLevelItem = null;
 
+        // 4. Faucet
+        faucetData = ScriptableObject.CreateInstance<ItemData>();
+        faucetData.name = "FaucetData";
+        faucetData.itemName = "Antik Bakır Musluk";
+        faucetData.itemChainName = "Faucet";
+        faucetData.level = 1;
+        faucetData.isGenerator = false;
+        faucetData.itemColor = Color.white;
+        faucetData.nextLevelItem = null;
+
         // Set spawnable items
-        spawnableItems = new List<ItemData> { toolLvl1, materialLvl1 };
+        spawnableItems = new List<ItemData> { toolLvl1, materialLvl1, materialLvl2, materialLvl3, faucetData };
     }
 
     public void SpawnItemFromGenerator(MergeItem generator)
     {
-        if (generator == null || generator.currentCell == null) return;
-
-        List<GridCell> emptyNeighbors = GetEmptyNeighborCells(generator.currentCell);
-        GridCell targetCell = null;
-
-        if (emptyNeighbors.Count > 0)
+        List<GridCell> emptySlots = GetEmptyCells();
+        if (emptySlots.Count == 0)
         {
-            targetCell = emptyNeighbors[UnityEngine.Random.Range(0, emptyNeighbors.Count)];
-        }
-        else
-        {
-            List<GridCell> allEmpty = GetEmptyCells();
-            if (allEmpty.Count > 0)
-            {
-                targetCell = allEmpty[UnityEngine.Random.Range(0, allEmpty.Count)];
-            }
-        }
-
-        if (targetCell == null)
-        {
-            Debug.LogWarning("Grid tamamen dolu! Yeni eşya üretilemiyor.");
+            Debug.LogWarning("Tepsi dolu! Yeni alet üretilemiyor.");
             return;
         }
 
-        ItemData itemToSpawn = UnityEngine.Random.value < 0.6f ? toolLvl1 : materialLvl1;
+        // İlk boş slotu seç
+        GridCell targetCell = emptySlots[0];
+
+        // Rastgele restorasyon eşyası seç
+        ItemData itemToSpawn = GetRandomRestorationItem();
 
         GameObject itemObj = Instantiate(itemPrefab, targetCell.transform.position, Quaternion.identity);
         itemObj.SetActive(true);
         MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
         mergeItem.Initialize(itemToSpawn, targetCell);
+    }
+
+    private ItemData GetRandomRestorationItem()
+    {
+        float r = UnityEngine.Random.value;
+        if (r < 0.25f) return toolLvl1;          // Fırça
+        else if (r < 0.50f) return materialLvl1; // Harç Kovası
+        else if (r < 0.70f) return materialLvl2; // Karo
+        else if (r < 0.85f) return materialLvl3; // Mermer
+        else return faucetData;                 // Musluk
     }
 
     private List<GridCell> GetEmptyNeighborCells(GridCell center)
@@ -413,7 +410,6 @@ public class GridManager : MonoBehaviour
 
     public void SpawnRestorationTargets()
     {
-        // Temizle (varsa eski hedefleri sil)
         foreach (var oldTarget in Object.FindObjectsByType<RestorationTarget>(FindObjectsSortMode.None))
         {
             Destroy(oldTarget.gameObject);
@@ -428,6 +424,8 @@ public class GridManager : MonoBehaviour
         CreateTargetObject("t3", "Material", 2, "Karoları Döşe", new Vector3(-1.0f, 0.8f, 0f));
         // t4: "Kemer Sütunlarını Mermerle Yenile", Material Lvl 3 (Marble)
         CreateTargetObject("t4", "Material", 3, "Sütunları Onar", new Vector3(1.0f, 0.8f, 0f));
+        // t5: "Antik Çeşmenin Musluğunu Yenile", Faucet Lvl 1 (Faucet)
+        CreateTargetObject("t5", "Faucet", 1, "Musluğu Yenile", new Vector3(0f, 1.8f, 0f));
     }
 
     private void CreateTargetObject(string taskId, string chain, int lvl, string desc, Vector3 pos)

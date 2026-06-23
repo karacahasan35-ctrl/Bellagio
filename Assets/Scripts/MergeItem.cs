@@ -160,41 +160,8 @@ public class MergeItem : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoin
             }
         }
 
-        // 2. Klasik Grid birleştirme/yerleştirme kontrolü
-        GridCell targetCell = GridManager.Instance.GetCellFromWorldPosition(transform.position);
-
-        if (targetCell != null)
-        {
-            if (targetCell == currentCell)
-            {
-                SnapTo(originalPosition);
-            }
-            else if (targetCell.IsEmpty)
-            {
-                currentCell.ClearCell();
-                targetCell.AssignItem(this);
-                SnapTo(targetCell.transform.position);
-            }
-            else
-            {
-                MergeItem otherItem = targetCell.occupiedItem;
-
-                if (CanMergeWith(otherItem))
-                {
-                    currentCell.ClearCell();
-                    otherItem.Upgrade(itemData.nextLevelItem);
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    SnapTo(originalPosition);
-                }
-            }
-        }
-        else
-        {
-            SnapTo(originalPosition);
-        }
+        // 2. Birleşme olmadığı için orijinal slotuna geri dön
+        SnapTo(originalPosition);
     }
 
     private Vector3 GetWorldPositionOfPointer(PointerEventData eventData)
