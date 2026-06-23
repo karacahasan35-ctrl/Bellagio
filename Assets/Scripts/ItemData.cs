@@ -7,6 +7,7 @@ public class ItemData : ScriptableObject
     public string itemName;
     public string itemChainName;
     public int level = 1;
+    public bool isGenerator = false;
 
     [Header("Visuals")]
     public Sprite itemIcon;

@@ -20,6 +20,15 @@ public class GridManager : MonoBehaviour
     private List<GridCell> allCells = new List<GridCell>();
     [HideInInspector] public MergeItem selectedItem;
 
+    private ItemData toolboxData;
+    private ItemData toolLvl1;
+    private ItemData toolLvl2;
+    private ItemData toolLvl3;
+    private ItemData toolLvl4;
+    private ItemData materialLvl1;
+    private ItemData materialLvl2;
+    private ItemData materialLvl3;
+
     private void Awake()
     {
         if (Instance == null)
@@ -64,11 +73,19 @@ public class GridManager : MonoBehaviour
 
     private void SpawnInitialItems()
     {
-        // Başlangıçta birkaç boş hücreye rastgele eşya spawn et
-        int initialSpawnCount = 5;
-        for (int i = 0; i < initialSpawnCount; i++)
+        // Başlangıçta sadece grid'in tam ortasına 1 adet "Restorasyon Alet Çantası" yerleştir
+        GridCell centerCell = GetCell(width / 2, height / 2);
+        if (centerCell == null && allCells.Count > 0)
         {
-            SpawnItemInRandomCell();
+            centerCell = allCells[allCells.Count / 2];
+        }
+
+        if (centerCell != null)
+        {
+            GameObject itemObj = Instantiate(itemPrefab, centerCell.transform.position, Quaternion.identity);
+            itemObj.SetActive(true);
+            MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
+            mergeItem.Initialize(toolboxData, centerCell);
         }
     }
 
@@ -140,11 +157,7 @@ public class GridManager : MonoBehaviour
     private void SetupDynamicPrefabs()
     {
         // 1. Eşyaları yükle
-        if (spawnableItems == null || spawnableItems.Count == 0)
-        {
-            spawnableItems = new List<ItemData>(Resources.LoadAll<ItemData>(""));
-            Debug.Log($"[GridManager] Loaded {spawnableItems.Count} items from Resources.");
-        }
+        CreateRealisticItems();
 
         // 2. Hücre prefab'ını kontrol et ve dinamik olarak oluştur
         if (cellPrefab == null)
@@ -248,5 +261,152 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void CreateRealisticItems()
+    {
+        // 1. Toolbox (Generator)
+        toolboxData = ScriptableObject.CreateInstance<ItemData>();
+        toolboxData.name = "ToolboxData";
+        toolboxData.itemName = "Restorasyon Alet Çantası";
+        toolboxData.itemChainName = "Toolbox";
+        toolboxData.level = 1;
+        toolboxData.isGenerator = true;
+        toolboxData.itemColor = Color.white;
+        toolboxData.nextLevelItem = null;
+
+        // 2. Tools
+        toolLvl1 = ScriptableObject.CreateInstance<ItemData>();
+        toolLvl1.name = "ToolLvl1";
+        toolLvl1.itemName = "Restorasyon Fırçası";
+        toolLvl1.itemChainName = "Tool";
+        toolLvl1.level = 1;
+        toolLvl1.isGenerator = false;
+        toolLvl1.itemColor = Color.white;
+
+        toolLvl2 = ScriptableObject.CreateInstance<ItemData>();
+        toolLvl2.name = "ToolLvl2";
+        toolLvl2.itemName = "Harç Malası";
+        toolLvl2.itemChainName = "Tool";
+        toolLvl2.level = 2;
+        toolLvl2.isGenerator = false;
+        toolLvl2.itemColor = Color.white;
+
+        toolLvl3 = ScriptableObject.CreateInstance<ItemData>();
+        toolLvl3.name = "ToolLvl3";
+        toolLvl3.itemName = "Taşçı Çekici";
+        toolLvl3.itemChainName = "Tool";
+        toolLvl3.level = 3;
+        toolLvl3.isGenerator = false;
+        toolLvl3.itemColor = Color.white;
+
+        toolLvl4 = ScriptableObject.CreateInstance<ItemData>();
+        toolLvl4.name = "ToolLvl4";
+        toolLvl4.itemName = "Hassas Iskarpela";
+        toolLvl4.itemChainName = "Tool";
+        toolLvl4.level = 4;
+        toolLvl4.isGenerator = false;
+        toolLvl4.itemColor = Color.white;
+
+        toolLvl1.nextLevelItem = toolLvl2;
+        toolLvl2.nextLevelItem = toolLvl3;
+        toolLvl3.nextLevelItem = toolLvl4;
+        toolLvl4.nextLevelItem = null;
+
+        // 3. Materials
+        materialLvl1 = ScriptableObject.CreateInstance<ItemData>();
+        materialLvl1.name = "MaterialLvl1";
+        materialLvl1.itemName = "Doğal Kireç Harcı Kovası";
+        materialLvl1.itemChainName = "Material";
+        materialLvl1.level = 1;
+        materialLvl1.isGenerator = false;
+        materialLvl1.itemColor = Color.white;
+
+        materialLvl2 = ScriptableObject.CreateInstance<ItemData>();
+        materialLvl2.name = "MaterialLvl2";
+        materialLvl2.itemName = "Restorasyon Karosu";
+        materialLvl2.itemChainName = "Material";
+        materialLvl2.level = 2;
+        materialLvl2.isGenerator = false;
+        materialLvl2.itemColor = Color.white;
+
+        materialLvl3 = ScriptableObject.CreateInstance<ItemData>();
+        materialLvl3.name = "MaterialLvl3";
+        materialLvl3.itemName = "Yontulmuş Mermer Blok";
+        materialLvl3.itemChainName = "Material";
+        materialLvl3.level = 3;
+        materialLvl3.isGenerator = false;
+        materialLvl3.itemColor = Color.white;
+
+        materialLvl1.nextLevelItem = materialLvl2;
+        materialLvl2.nextLevelItem = materialLvl3;
+        materialLvl3.nextLevelItem = null;
+
+        // Set spawnable items
+        spawnableItems = new List<ItemData> { toolLvl1, materialLvl1 };
+    }
+
+    public void SpawnItemFromGenerator(MergeItem generator)
+    {
+        if (generator == null || generator.currentCell == null) return;
+
+        List<GridCell> emptyNeighbors = GetEmptyNeighborCells(generator.currentCell);
+        GridCell targetCell = null;
+
+        if (emptyNeighbors.Count > 0)
+        {
+            targetCell = emptyNeighbors[UnityEngine.Random.Range(0, emptyNeighbors.Count)];
+        }
+        else
+        {
+            List<GridCell> allEmpty = GetEmptyCells();
+            if (allEmpty.Count > 0)
+            {
+                targetCell = allEmpty[UnityEngine.Random.Range(0, allEmpty.Count)];
+            }
+        }
+
+        if (targetCell == null)
+        {
+            Debug.LogWarning("Grid tamamen dolu! Yeni eşya üretilemiyor.");
+            return;
+        }
+
+        ItemData itemToSpawn = UnityEngine.Random.value < 0.6f ? toolLvl1 : materialLvl1;
+
+        GameObject itemObj = Instantiate(itemPrefab, targetCell.transform.position, Quaternion.identity);
+        itemObj.SetActive(true);
+        MergeItem mergeItem = itemObj.GetComponent<MergeItem>();
+        mergeItem.Initialize(itemToSpawn, targetCell);
+    }
+
+    private List<GridCell> GetEmptyNeighborCells(GridCell center)
+    {
+        List<GridCell> neighbors = new List<GridCell>();
+        foreach (var cell in allCells)
+        {
+            if (cell != null && cell.IsEmpty)
+            {
+                int dx = Mathf.Abs(cell.gridX - center.gridX);
+                int dy = Mathf.Abs(cell.gridY - center.gridY);
+                if (dx <= 1 && dy <= 1 && (dx != 0 || dy != 0))
+                {
+                    neighbors.Add(cell);
+                }
+            }
+        }
+        return neighbors;
+    }
+
+    public GridCell GetCell(int x, int y)
+    {
+        foreach (var cell in allCells)
+        {
+            if (cell != null && cell.gridX == x && cell.gridY == y)
+            {
+                return cell;
+            }
+        }
+        return null;
     }
 }

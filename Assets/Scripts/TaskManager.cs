@@ -52,11 +52,11 @@ public class TaskManager : MonoBehaviour
 
     private void InitializeTasks()
     {
-        // Seviye seviye gelecek 4 temel restorasyon görevi
-        allTasks.Add(new RenovationTask("t1", "Yoldaki Çakıl Taşlarını Süpür", "Pebble", 1, 100, 10));
-        allTasks.Add(new RenovationTask("t2", "Kırık Bahçe Duvarını Onar", "ChiseledStone", 2, 200, 20));
-        allTasks.Add(new RenovationTask("t3", "Tarihi Havuzdaki Yosunları Temizle", "Pebble", 1, 150, 15));
-        allTasks.Add(new RenovationTask("t4", "Hasar Görmüş Kemer Sütunlarını Onar", "ChiseledStone", 2, 300, 30));
+        // Seviye seviye gelecek 4 temel teknik restorasyon görevi
+        allTasks.Add(new RenovationTask("t1", "Karoların Kalıntılarını Temizle", "Tool", 1, 100, 10)); // Restorasyon Fırçası (Lvl 1)
+        allTasks.Add(new RenovationTask("t2", "Çatlak Duvarları Kireç Harcıyla Doldur", "Material", 1, 150, 15)); // Kireç Harcı (Lvl 1)
+        allTasks.Add(new RenovationTask("t3", "Zemini Restorasyon Karosu ile Döşe", "Material", 2, 250, 25)); // Restorasyon Karosu (Lvl 2)
+        allTasks.Add(new RenovationTask("t4", "Kemer Sütunlarını Mermerle Yenile", "Material", 3, 400, 40)); // Yontulmuş Mermer (Lvl 3)
     }
 
     public RenovationTask GetNextActiveTask()

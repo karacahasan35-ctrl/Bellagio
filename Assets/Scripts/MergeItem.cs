@@ -51,15 +51,8 @@ public class MergeItem : MonoBehaviour
         {
             spriteRenderer.color = itemData.itemColor;
             
-            // Eğer görsel tanımlanmışsa onu kullan, yoksa yuvarlak çiz
-            if (itemData.itemIcon != null)
-            {
-                spriteRenderer.sprite = itemData.itemIcon;
-            }
-            else
-            {
-                spriteRenderer.sprite = CreateCircleSprite();
-            }
+            // Gerçekçi çizim fabrikasını kullan! (URP 2D uyumlu unlit sprite üretir)
+            spriteRenderer.sprite = RestorationSpriteFactory.GetSprite(itemData.itemChainName, itemData.level, itemData.isGenerator);
         }
     }
 
@@ -107,14 +100,28 @@ public class MergeItem : MonoBehaviour
     {
         if (snapCoroutine != null) StopCoroutine(snapCoroutine);
 
-        isDragging = true;
-        originalPosition = currentCell != null ? currentCell.transform.position : transform.position;
-        
-        // Eşyayı seçilen olarak kaydet ve vurgulamak için hafif büyüt
+        // Seçimi kaydet
         if (GridManager.Instance != null)
         {
             GridManager.Instance.selectedItem = this;
         }
+
+        // JENERATÖR mekaniği: Tıklanınca etrafta eşya üret, sürükleme yapma!
+        if (itemData != null && itemData.isGenerator)
+        {
+            isDragging = false;
+            if (GridManager.Instance != null)
+            {
+                GridManager.Instance.SpawnItemFromGenerator(this);
+            }
+            // Küçük bir tıklama yaylanma efekti
+            transform.localScale = Vector3.one * 0.85f;
+            StartCoroutine(ScaleBackToNormal());
+            return;
+        }
+
+        isDragging = true;
+        originalPosition = currentCell != null ? currentCell.transform.position : transform.position;
         transform.localScale = Vector3.one * 1.15f;
 
         // Fare ile nesnenin merkezi arasındaki mesafeyi kaydet
