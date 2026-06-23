@@ -41,3 +41,4 @@ Assembly-CSharp-Editor-firstpass.csproj
 # OS generated files
 .DS_Store
 Thumbs.db
+unity_build.log
