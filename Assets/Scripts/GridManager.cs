@@ -33,6 +33,7 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
+        SetupDynamicPrefabs();
         GenerateGrid();
         SpawnInitialItems();
     }
@@ -131,5 +132,88 @@ public class GridManager : MonoBehaviour
             }
         }
         return emptyCells;
+    }
+
+    private void SetupDynamicPrefabs()
+    {
+        // 1. Eşyaları yükle
+        if (spawnableItems == null || spawnableItems.Count == 0)
+        {
+            spawnableItems = new List<ItemData>(Resources.LoadAll<ItemData>(""));
+            Debug.Log($"[GridManager] Loaded {spawnableItems.Count} items from Resources.");
+        }
+
+        // 2. Hücre prefab'ını kontrol et ve dinamik olarak oluştur
+        if (cellPrefab == null)
+        {
+            GameObject cellObj = new GameObject("DynamicCellTemplate");
+            var sr = cellObj.AddComponent<SpriteRenderer>();
+            
+            // Hücre görselini oluştur (Açık-koyu kontrastlı glassmorphic kenarlık)
+            sr.sprite = CreateCellSprite(new Color(0.12f, 0.12f, 0.15f, 0.6f), new Color(0.23f, 0.23f, 0.28f, 1f));
+            sr.sortingOrder = 1; // Arkada dursun
+            
+            cellObj.AddComponent<GridCell>();
+            cellObj.SetActive(false);
+            cellPrefab = cellObj;
+            Debug.Log("[GridManager] Dynamic cell template generated.");
+        }
+
+        // 3. Eşya prefab'ını kontrol et ve dinamik olarak oluştur
+        if (itemPrefab == null)
+        {
+            GameObject itemObj = new GameObject("DynamicItemTemplate");
+            var sr = itemObj.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 5; // Önde dursun
+            
+            itemObj.AddComponent<BoxCollider2D>();
+            itemObj.AddComponent<MergeItem>();
+            
+            itemObj.SetActive(false);
+            itemPrefab = itemObj;
+            Debug.Log("[GridManager] Dynamic item template generated.");
+        }
+    }
+
+    private Sprite CreateCellSprite(Color backgroundColor, Color borderColor, int borderThickness = 4, int width = 128, int height = 128)
+    {
+        Texture2D texture = new Texture2D(width, height);
+        Color[] pixels = new Color[width * height];
+        
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                // Yumuşatılmış kenarlar (Yuvarlatılmış köşe efekti)
+                int rx = x - width / 2;
+                int ry = y - height / 2;
+                float distToCorner = Mathf.Max(Mathf.Abs(rx) - (width / 2 - 16), 0);
+                float distToCornerY = Mathf.Max(Mathf.Abs(ry) - (height / 2 - 16), 0);
+                float cornerDist = Mathf.Sqrt(distToCorner * distToCorner + distToCornerY * distToCornerY);
+                
+                if (cornerDist > 16)
+                {
+                    pixels[y * width + x] = Color.clear;
+                }
+                else if (cornerDist > 14.5f)
+                {
+                    // Köşe kenarlığı
+                    pixels[y * width + x] = new Color(borderColor.r, borderColor.g, borderColor.b, 16 - cornerDist);
+                }
+                else if (x < borderThickness || x >= width - borderThickness || y < borderThickness || y >= height - borderThickness || cornerDist > 12)
+                {
+                    // Düz kenarlık
+                    pixels[y * width + x] = borderColor;
+                }
+                else
+                {
+                    // İç kısım
+                    pixels[y * width + x] = backgroundColor;
+                }
+            }
+        }
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f));
     }
 }

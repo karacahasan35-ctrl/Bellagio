@@ -42,15 +42,58 @@ public class MergeItem : MonoBehaviour
     {
         if (itemData != null)
         {
-            spriteRenderer.sprite = itemData.itemIcon;
             spriteRenderer.color = itemData.itemColor;
             
-            // Eğer görsel yoksa geçici olarak beyaz bir daire/kare üzerinde seviye rengi kullanırız
-            if (spriteRenderer.sprite == null)
+            // Eğer görsel tanımlanmışsa onu kullan, yoksa yuvarlak çiz
+            if (itemData.itemIcon != null)
             {
-                // Unity 6 Default Sprite kullanmak üzere boş bırakabiliriz
+                spriteRenderer.sprite = itemData.itemIcon;
+            }
+            else
+            {
+                spriteRenderer.sprite = CreateCircleSprite();
             }
         }
+    }
+
+    private Sprite CreateCircleSprite(int radius = 64)
+    {
+        int size = radius * 2;
+        Texture2D texture = new Texture2D(size, size);
+        Color[] pixels = new Color[size * size];
+        
+        // Şeffaf arka plan
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+        
+        float center = radius - 0.5f;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x - center;
+                float dy = y - center;
+                // Dairenin içi
+                if (dx * dx + dy * dy <= radius * radius)
+                {
+                    // Kenarları hafif yumuşatılmış daire (Anti-aliasing etkisi)
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dist > radius - 1.5f)
+                    {
+                        pixels[y * size + x] = new Color(1f, 1f, 1f, radius - dist);
+                    }
+                    else
+                    {
+                        pixels[y * size + x] = Color.white;
+                    }
+                }
+            }
+        }
+        texture.SetPixels(pixels);
+        texture.Apply();
+        
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        sprite.name = "TempCircleSprite";
+        return sprite;
     }
 
     private void OnMouseDown()
